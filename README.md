@@ -23,12 +23,12 @@ Our team has been heavily inspired by *A Seascape, Shipping by Moonlight* by Cla
 
 ## Part 2: Mechanics
 
-| Team Member | Mechanic | Script File |
+| Team Member | Mechanic |
 |---|---|---|
-| **Mingtao Qu** | Time-based | `time-sky.js` |
-| **Larry Hao** | Audio | `audio-atmosphere.js` |
-| **Yiming Wang** | Perlin Noise + Randomness | `perlin-ocean.js` |
-| **Jiale Bi** | User Input | `input-wind.js` |
+| **Mingtao Qu** | Time-based |
+| **Larry Hao** | Audio |
+| **Yiming Wang** | Perlin Noise + Randomness |
+| **Jiale Bi** | User Input |
 
 ---
 
