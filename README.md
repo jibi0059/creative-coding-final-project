@@ -24,7 +24,7 @@ Our team has been heavily inspired by *A Seascape, Shipping by Moonlight* by Cla
 ## Part 2: Mechanics
 
 | Team Member | Mechanic |
-|---|---|---|
+|---|---|
 | **Mingtao Qu** | Time-based |
 | **Larry Hao** | Audio |
 | **Yiming Wang** | Perlin Noise + Randomness |
