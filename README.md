@@ -1,7 +1,7 @@
 # Moonlight Drift
 ### An Interactive Reinterpretation of *A Seascape, Shipping by Moonlight* by Claude Monet
 
-A team pitch for our IDEA9103 Creative Coding final project. We transform Monet's atmospheric nocturnal seascape into a living, breathing digital environment driven by sound, time, generative motion, and audience interaction.
+Below is a team pitch for our IDEA9103 Creative Coding Final Project. We will transform Monet's *atmospheric nocturnal seascape* into a living, breathing digital environment driven by sound, time, generative motion and audience interaction.
 
 ---
 
