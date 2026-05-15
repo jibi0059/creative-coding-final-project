@@ -27,7 +27,7 @@ Our team has been heavily inspired by *A Seascape, Shipping by Moonlight* by Cla
 |---|---|
 | **Mingtao Qu** | Time-based |
 | **Larry Hao** | Audio |
-| **Yiming Wang** | Perlin Noise + Randomness |
+
 | **Jiale Bi** | User Input |
 
 ---
