@@ -5,7 +5,7 @@ Below is a team pitch for our IDEA9103 Creative Coding Final Project. We will tr
 
 ---
 
-## Part 1: Project Direction
+## Part 1: Project Direction⛵️
 
 We will reinterpret an existing artwork.
 
