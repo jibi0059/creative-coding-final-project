@@ -7,7 +7,7 @@ Below is a team pitch for our IDEA9103 Creative Coding Final Project. We will tr
 
 ## Part 1: Project Direction
 
-We will Reinterpret an existing artwork.
+We will reinterpret an existing artwork.
 
 **Artwork**: *A Seascape, Shipping by Moonlight* (c. 1864) by **Claude Monet**
 
