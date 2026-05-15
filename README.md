@@ -21,7 +21,7 @@ Our team has been heavily inspired by *A Seascape, Shipping by Moonlight* by Cla
 
 ---
 
-## Part 2: Mechanics
+## Part 2: Mechanics🛠️
 
 | Team Member | Mechanic |
 |---|---|
