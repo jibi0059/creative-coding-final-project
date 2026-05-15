@@ -43,6 +43,7 @@ The lighthouse will also respond to the passage of time. During the daytime, the
 
 ### 🎵 Audio — Larry Hao
 
+The audio mechanic transforms the environmental condition of the seascape through wave behaviour and atmospheric fog movement. Quiet audio creates calm ocean motion and slow drifting fog, while intense sound generates turbulent waves, unstable water movement, and dense atmospheric distortion. Different frequency ranges influence separate environmental systems, allowing the seascape to respond organically to sound intensity. The mechanic also introduces a "memory of sound," where waves and fog retain residual motion after intense audio moments, creating the feeling that the environment has been physically affected by sound. This allows the seascape to behave as a living atmospheric system rather than a direct music visualiser.
 
 ---
 
