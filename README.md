@@ -7,7 +7,7 @@ A team pitch for our IDEA9103 Creative Coding final project. We transform Monet'
 
 ## Part 1: Project Direction
 
-**Project path**: Option 1 — Reinterpret an existing artwork
+**Project path**: We will Reinterpret an existing artwork
 
 **Artwork**: *A Seascape, Shipping by Moonlight* (c. 1864) by **Claude Monet**
 
