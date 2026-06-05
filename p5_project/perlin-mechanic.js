@@ -39,7 +39,7 @@ class OceanPainter {
     this.x = random(width);
     this.y = random(seaTop, height);
     this.size = 30;
-    this.speed = 2;
+    this.speed = 3;
   }
   move() {
     this.x += this.speed;
