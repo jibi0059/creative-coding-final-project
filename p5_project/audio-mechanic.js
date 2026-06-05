@@ -13,8 +13,7 @@ let stars = [];
 let currentStarEnergy = 0.15;
 let targetStarEnergy = 0.15;
 
-function setup() {
-  createCanvas(windowWidth, windowHeight);
+function setupAudioMechanic() {
 
   mic = new p5.AudioIn();
 
@@ -25,7 +24,7 @@ function setup() {
   createStars();
 }
 
-function draw() {
+function drawAudioMechanic() {
   background(8, 12, 28);
 
   updateSoundLevel();
@@ -191,7 +190,6 @@ function drawMoonReflection(intensity, speed) {
   }
 }
 
-function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);
+function resizeAudioMechanic() {
   createStars();
 }
