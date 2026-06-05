@@ -1,10 +1,10 @@
 const SEA_TOP_RATIO = 0.5;
 const TIME_STEP = 0.006;
-const PAINTER_COUNT = 1000;
+const PAINTER_COUNT = 500;
 
 
 let perlinLayer;
-let painter = [];
+let painters = [];
 let time = 0;
 
 function setupPerlinMechanic() {
@@ -12,7 +12,7 @@ function setupPerlinMechanic() {
   perlinLayer.noStroke();
 
   
-
+  resetOcean();
 }
 
 
@@ -27,13 +27,27 @@ function drawPerlinMechanic() {
   perlinLayer.fill(20, 80, 140, 35);
   perlinLayer.rect(0, seaTop, width, height - seaTop);
   //extent of the sea
-  
+  for (let painter of perlinPainters) {
   painter.move();
   painter.paint();
 
   time += TIME_STEP;
   image(perlinLayer, 0, 0);
 }
+}
+
+
+function resetOcean() {
+  painters = [];
+
+  for (let i = 0; i < PAINTER_COUNT; i++) {
+    painters.push(new OceanPainter());
+  }
+}
+
+
+
+
 
 class OceanPainter {
   constructor() {
@@ -54,8 +68,9 @@ class OceanPainter {
     );
     const angle = map(noiseValue, 0, 1, -PI * 0.15, PI * 0.15);
       this.x += cos(angle) * this.speed;
-      this.y += sin(angle) * this.speed;
-    //move up and down randomly
+      this.y += sin(angle) * this.speed * 0.5;
+    //move up and down randomly, do not hgher than seatop
+    
   }
    paint() {
     perlinLayer.fill(80, 160, 220, 80);
@@ -78,4 +93,6 @@ class OceanPainter {
 function resizePerlinMechanic() {
   perlinLayer = createGraphics(width, height);
   perlinLayer.noStroke();
+
+  resetOcean();
 }
