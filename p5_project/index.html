@@ -6,6 +6,7 @@
   <title>Moonlight Drift</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/addons/p5.sound.min.js"></script>
   <script src="time-mechanic.js"></script>
   <script src="audio-mechanic.js"></script>
   <script src="perlin-mechanic.js"></script>
@@ -13,6 +14,13 @@
   <script src="sketch.js" defer></script>
 </head>
 <body>
-  <main id="sketch-holder" aria-label="Moonlight Drift p5.js canvas"></main>
+  <div id="mechanic-toggles">
+    <label><input type="checkbox" id="toggle-audio" checked> Audio</label>
+    <label><input type="checkbox" id="toggle-perlin" checked> Perlin</label>
+    <label><input type="checkbox" id="toggle-input" checked> Input</label>
+    <label><input type="checkbox" id="toggle-time" checked> Time</label>
+  </div>
+
+  <main id="sketch-holder"></main>
 </body>
 </html>

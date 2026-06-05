@@ -1,65 +1,131 @@
-let timeMechanic;
-let audioMechanic;
-let perlinMechanic;
-let inputMechanic;
+let mechanicToggles = {
+  environment: true,
+  audio: true,
+  perlin: true,
+  input: true,
+  time: true
+};
 
 function setup() {
-  const canvas = createCanvas(windowWidth, windowHeight);
-  canvas.parent("sketch-holder");
+  createCanvas(windowWidth, windowHeight);
+  setupMechanicToggles();
 
-  timeMechanic = new TimeMechanic();
-
-  if (typeof AudioMechanic !== "undefined") {
-    audioMechanic = new AudioMechanic();
+  // Environment mechanic: moon + calm sea preview layer
+  if (typeof setupEnvironmentMechanic === "function") {
+    setupEnvironmentMechanic();
   }
 
-  if (typeof PerlinMechanic !== "undefined") {
-    perlinMechanic = new PerlinMechanic();
+  // Larry's audio mechanic
+  if (typeof setupAudioMechanic === "function") {
+    setupAudioMechanic();
   }
 
-  if (typeof InputMechanic !== "undefined") {
-    inputMechanic = new InputMechanic();
+  // Perlin noise mechanic
+  if (typeof setupPerlinMechanic === "function") {
+    setupPerlinMechanic();
+  }
+
+  // Input mechanic
+  if (typeof setupInputMechanic === "function") {
+    setupInputMechanic();
+  }
+
+  // Time mechanic
+  if (typeof setupTimeMechanic === "function") {
+    setupTimeMechanic();
   }
 }
 
 function draw() {
-  background(5, 7, 13);
+  background(8, 12, 28);
 
-  const sceneState = timeMechanic.update();
-
-  timeMechanic.drawSky(sceneState);
-
-  if (perlinMechanic && typeof perlinMechanic.drawClouds === "function") {
-    perlinMechanic.drawClouds(sceneState);
+  // Environment mechanic: draw first so other mechanics can sit on top
+  if (mechanicToggles.environment && typeof drawEnvironmentMechanic === "function") {
+    drawEnvironmentMechanic();
   }
 
-  if (perlinMechanic && typeof perlinMechanic.drawSea === "function") {
-    perlinMechanic.drawSea(sceneState);
+  // Time mechanic
+  if (mechanicToggles.time && typeof drawTimeMechanic === "function") {
+    drawTimeMechanic();
   }
 
-  timeMechanic.drawLighthouse(sceneState);
-
-  if (audioMechanic && typeof audioMechanic.drawAtmosphere === "function") {
-    audioMechanic.drawAtmosphere(sceneState);
+  // Perlin noise mechanic
+  if (mechanicToggles.perlin && typeof drawPerlinMechanic === "function") {
+    drawPerlinMechanic();
   }
 
-  if (inputMechanic && typeof inputMechanic.drawRipples === "function") {
-    inputMechanic.drawRipples(sceneState);
+  // Input mechanic
+  if (mechanicToggles.input && typeof drawInputMechanic === "function") {
+    drawInputMechanic();
   }
-}
 
-function mousePressed() {
-  if (inputMechanic && typeof inputMechanic.addRipple === "function") {
-    inputMechanic.addRipple(mouseX, mouseY);
-  }
-}
-
-function keyPressed() {
-  if (inputMechanic && typeof inputMechanic.handleKey === "function") {
-    inputMechanic.handleKey(key);
+  // Larry's audio mechanic
+  // Keep this near the end so audio reactions can sit on top visually if needed.
+  if (mechanicToggles.audio && typeof drawAudioMechanic === "function") {
+    drawAudioMechanic();
   }
 }
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
+
+  // Environment mechanic
+  if (typeof resizeEnvironmentMechanic === "function") {
+    resizeEnvironmentMechanic();
+  }
+
+  // Larry's audio mechanic
+  if (typeof resizeAudioMechanic === "function") {
+    resizeAudioMechanic();
+  }
+
+  // Perlin noise mechanic
+  if (typeof resizePerlinMechanic === "function") {
+    resizePerlinMechanic();
+  }
+
+  // Input mechanic
+  if (typeof resizeInputMechanic === "function") {
+    resizeInputMechanic();
+  }
+
+  // Time mechanic
+  if (typeof resizeTimeMechanic === "function") {
+    resizeTimeMechanic();
+  }
+}
+
+function setupMechanicToggles() {
+  const audioToggle = document.getElementById("toggle-audio");
+  const perlinToggle = document.getElementById("toggle-perlin");
+  const inputToggle = document.getElementById("toggle-input");
+  const timeToggle = document.getElementById("toggle-time");
+
+  if (audioToggle) {
+    mechanicToggles.audio = audioToggle.checked;
+    audioToggle.addEventListener("change", function () {
+      mechanicToggles.audio = audioToggle.checked;
+    });
+  }
+
+  if (perlinToggle) {
+    mechanicToggles.perlin = perlinToggle.checked;
+    perlinToggle.addEventListener("change", function () {
+      mechanicToggles.perlin = perlinToggle.checked;
+    });
+  }
+
+  if (inputToggle) {
+    mechanicToggles.input = inputToggle.checked;
+    inputToggle.addEventListener("change", function () {
+      mechanicToggles.input = inputToggle.checked;
+    });
+  }
+
+  if (timeToggle) {
+    mechanicToggles.time = timeToggle.checked;
+    timeToggle.addEventListener("change", function () {
+      mechanicToggles.time = timeToggle.checked;
+    });
+  }
 }
