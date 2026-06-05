@@ -168,6 +168,7 @@ class TimeMechanic {
     this.drawStars(sceneState);
     this.drawSkyGrain(sceneState);
     this.drawSeaPlaceholder(sceneState);
+    this.drawLighthouse(sceneState);
     this.drawBoat(sceneState);
   }
 
@@ -635,7 +636,78 @@ class TimeMechanic {
   }
 
   drawLighthouse(sceneState) {
-    // Reserved for the lighthouse part of the time mechanic.
-    // Keeping the method here lets sketch.js call it later without changing the class interface.
+    // Draws the lighthouse from the user's SVG geometry.
+    // The original SVG uses an 800 by 800 viewBox, so these coordinates are scaled into the p5 canvas.
+    const lighthouseX = width * 0.9;
+    const baseY = sceneState.horizonY + height * 0.2;
+    const towerHeight = height * 0.4;
+    const svgVisibleHeight = 689;
+    const svgBaseY = 744;
+    const svgCenterX = 527.5;
+    const scale = towerHeight / svgVisibleHeight;
+    const towerColor = color(255, 255, 255);
+    const landColor = color(46, 49, 63);
+
+    push();
+    this.drawSvgLighthouse(lighthouseX, baseY, scale, svgCenterX, svgBaseY, towerColor, landColor);
+    pop();
   }
+
+  drawSvgLighthouse(originX, baseY, scale, svgCenterX, svgBaseY, towerColor, landColor) {
+    // Recreates the supplied SVG with p5 primitives instead of loading an external file.
+    // x and y values here come directly from the SVG, then are converted by svgX() and svgY().
+    const svgX = (x) => originX + (x - svgCenterX) * scale;
+    const svgY = (y) => baseY + (y - svgBaseY) * scale;
+
+    noStroke();
+    fill(red(landColor), green(landColor), blue(landColor), 255);
+    beginShape();
+    vertex(svgX(419.158), svgY(583));
+    vertex(svgX(800), svgY(583));
+    vertex(svgX(800), svgY(744));
+    vertex(svgX(197), svgY(744));
+    vertex(svgX(230.55), svgY(686.695));
+    vertex(svgX(312.159), svgY(670.322));
+    vertex(svgX(371.099), svgY(612.107));
+    vertex(svgX(399.209), svgY(605.74));
+    endShape(CLOSE);
+
+    fill(red(towerColor), green(towerColor), blue(towerColor), 255);
+    triangle(svgX(527.5), svgY(55), svgX(606.741), svgY(113.5), svgX(448.259), svgY(113.5));
+    rect(svgX(465), svgY(112), 126 * scale, 21 * scale);
+    rect(svgX(465), svgY(195), 125 * scale, 29 * scale);
+
+    beginShape();
+    vertex(svgX(481.448), svgY(224));
+    vertex(svgX(574.552), svgY(224));
+    vertex(svgX(609), svgY(583));
+    vertex(svgX(447), svgY(583));
+    endShape(CLOSE);
+
+    rect(svgX(475), svgY(133), 15 * scale, 62 * scale);
+    rect(svgX(567), svgY(133), 14 * scale, 62 * scale);
+    rect(svgX(513), svgY(159), 29 * scale, 36 * scale, 10 * scale, 10 * scale, 0, 0);
+  }
+}
+
+let timeMechanic;
+
+function setupTimeMechanic() {
+  // Creates one shared instance for sketch.js to call during the main p5 setup phase.
+  timeMechanic = new TimeMechanic();
+}
+
+function drawTimeMechanic() {
+  // Bridges the class-based time mechanic with the team's function-based sketch.js structure.
+  // Recreating the instance only if it is missing makes the preview more tolerant of load-order changes.
+  if (!timeMechanic) {
+    setupTimeMechanic();
+  }
+
+  const sceneState = timeMechanic.update();
+  timeMechanic.drawSky(sceneState);
+}
+
+function resizeTimeMechanic() {
+  // The time mechanic uses width and height directly each frame, so no cached canvas layer needs resizing here.
 }
