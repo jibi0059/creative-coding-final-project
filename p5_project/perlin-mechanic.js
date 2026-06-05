@@ -26,6 +26,7 @@ function drawPerlinMechanic() {
   perlinLayer.rect(0, seaTop, width, height - seaTop);
   //extent of the sea
   
+  painter.move();
   painter.paint();
 
   image(perlinLayer, 0, 0);
@@ -38,6 +39,15 @@ class OceanPainter {
     this.x = random(width);
     this.y = random(seaTop, height);
     this.size = 30;
+    this.speed = 2;
+  }
+  move() {
+    this.x += this.speed;
+
+    if (this.x > width) {
+      this.x = 0;
+      //if it goes off the right side, it reappears from the left side.
+    }
   }
    paint() {
     perlinLayer.fill(80, 160, 220, 80);
