@@ -1,3 +1,12 @@
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+canvas {
+  display: block;
+}
+
 #mechanic-toggles {
   position: fixed;
   top: 16px;
