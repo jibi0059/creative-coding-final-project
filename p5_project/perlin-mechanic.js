@@ -1,15 +1,17 @@
 const SEA_TOP_RATIO = 0.5;
 const TIME_STEP = 0.006;
+const PAINTER_COUNT = 1000;
+
 
 let perlinLayer;
-let painter;
+let painter = [];
 let time = 0;
 
 function setupPerlinMechanic() {
   perlinLayer = createGraphics(width, height);
   perlinLayer.noStroke();
 
-  painter = new OceanPainter();
+  
 
 }
 
@@ -39,8 +41,8 @@ class OceanPainter {
 
     this.x = random(width);
     this.y = random(seaTop, height);
-    this.size = 30;
-    this.speed = 3;
+    this.size = random(8, 28);
+    this.speed = random(0.7, 2.2);
     this.seed = random(1000);
     //aim to move to different routes
   }
