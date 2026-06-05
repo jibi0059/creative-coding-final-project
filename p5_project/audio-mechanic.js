@@ -19,7 +19,7 @@ function setupAudioMechanic() {
 
   micButton = createButton("START MIC");
   micButton.position(30, 30);
-  micButton.mousePressed(startMic);
+  micButton.mousePressed(toggleMic);
 
   createStars();
 }
@@ -36,14 +36,25 @@ function drawAudioMechanic() {
   t += 0.01;
 }
 
-function startMic() {
-  userStartAudio();
-  getAudioContext().resume();
+function toggleMic() {
+  if (!micStarted) {
+    userStartAudio();
+    getAudioContext().resume();
 
-  mic.start(function() {
-    micStarted = true;
-    micButton.html("MIC ON — CLAP");
-  });
+    mic.start(function() {
+      micStarted = true;
+      micButton.html("MIC OFF");
+    });
+  } else {
+    mic.stop();
+    micStarted = false;
+    rawMicLevel = 0;
+    smoothedSound = 0;
+    clapImpact = 0;
+    targetIntensity = 2;
+    targetStarEnergy = 0.15;
+    micButton.html("START MIC");
+  }
 }
 
 function updateSoundLevel() {
