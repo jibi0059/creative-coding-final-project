@@ -7,10 +7,13 @@ let rawMicLevel = 0;
 let smoothedSound = 0;
 let clapImpact = 0;
 
-let oceanReveal = 0;
-let targetOceanReveal = 0;
+let oceanFront = 0;
+let targetOceanFront = 0;
 let currentWildness = 0;
 let targetWildness = 0;
+let stormExitOffset = 0;
+let stormEntering = false;
+let stormLeaving = false;
 
 let calmBrushes = [];
 let stormBrushes = [];
@@ -45,7 +48,10 @@ function toggleMic() {
     mic.start(function() {
       micStarted = true;
       micButton.html("MIC OFF");
-      targetOceanReveal = width;
+      targetOceanFront = width + width * 0.18;
+      stormEntering = true;
+      stormLeaving = false;
+      stormExitOffset = 0;
     });
   } else {
     mic.stop();
@@ -54,7 +60,9 @@ function toggleMic() {
     smoothedSound = 0;
     clapImpact = 0;
     targetWildness = 0;
-    targetOceanReveal = 0;
+    targetOceanFront = width + width * 0.22;
+    stormEntering = false;
+    stormLeaving = true;
     micButton.html("START MIC");
   }
 }
@@ -67,18 +75,18 @@ function updateSoundLevel() {
   }
 
   // Microphone values are tiny, so this boost makes voice/claps visible.
-  let boostedSound = constrain(rawMicLevel * 75, 0, 1);
+  let boostedSound = constrain(rawMicLevel * 48, 0, 1);
 
   // Sudden sounds push the ocean harder, then slowly fade like water energy.
   if (boostedSound > clapImpact) {
     clapImpact = boostedSound;
   }
 
-  clapImpact *= 0.91;
-  smoothedSound = lerp(smoothedSound, clapImpact, 0.28);
+  clapImpact *= 0.88;
+  smoothedSound = lerp(smoothedSound, clapImpact, 0.16);
 
   if (micStarted) {
-    targetWildness = constrain(map(smoothedSound, 0, 1, 0.08, 1), 0.08, 1);
+    targetWildness = constrain(map(smoothedSound, 0, 1, 0.06, 0.82), 0.06, 0.82);
   } else {
     targetWildness = 0;
   }
@@ -87,12 +95,20 @@ function updateSoundLevel() {
 }
 
 function updateOceanTransition() {
-  // When mic turns on, the active ocean flows in from the left.
-  // When mic turns off, it retreats back toward the left, revealing calm water again.
-  oceanReveal = lerp(oceanReveal, targetOceanReveal, 0.035);
+  // The storm ocean now behaves like moving water instead of a hard light mask.
+  // Mic on: a wave front enters from the left.
+  // Mic off: the storm water keeps travelling and exits toward the right.
+  if (micStarted) {
+    oceanFront = lerp(oceanFront, targetOceanFront, 0.018);
+    stormExitOffset = 0;
+  } else if (stormLeaving) {
+    stormExitOffset = lerp(stormExitOffset, width + width * 0.35, 0.025);
 
-  if (abs(oceanReveal - targetOceanReveal) < 0.5) {
-    oceanReveal = targetOceanReveal;
+    if (stormExitOffset > width + width * 0.25) {
+      stormLeaving = false;
+      oceanFront = 0;
+      stormExitOffset = 0;
+    }
   }
 }
 
@@ -236,66 +252,87 @@ function drawCalmReflection(oceanTop) {
 }
 
 function drawInteractiveOceanLayer() {
-  if (oceanReveal <= 1) return;
+  if (oceanFront <= 1 && !stormLeaving) return;
 
   push();
   drawingContext.save();
   drawingContext.beginPath();
-  drawingContext.rect(0, height * 0.45, oceanReveal, height * 0.55);
+
+  let oceanBase = height * 0.45;
+  let stormReach = height * 0.22;
+  let visibleFront = oceanFront - stormExitOffset;
+
+  drawingContext.moveTo(-width * 0.2 - stormExitOffset, height);
+  drawingContext.lineTo(-width * 0.2 - stormExitOffset, oceanBase + 20);
+
+  for (let x = -width * 0.2; x <= visibleFront; x += 24) {
+    let waveEdge = sin(x * 0.018 + t * 3.2) * 22;
+    let noiseEdge = (noise(x * 0.008, t * 0.8) - 0.5) * 42;
+    let edgeY = oceanBase + waveEdge + noiseEdge;
+    drawingContext.lineTo(x - stormExitOffset, edgeY);
+  }
+
+  drawingContext.lineTo(visibleFront - stormExitOffset, height);
+  drawingContext.closePath();
   drawingContext.clip();
 
+  translate(-stormExitOffset, 0);
   drawStormOcean();
 
   drawingContext.restore();
   pop();
 
-  drawRevealEdge();
+  drawWaveFrontEdge(visibleFront - stormExitOffset);
 }
 
 function drawStormOcean() {
-  let oceanTop = height * 0.45;
+  let oceanTop = height * 0.38;
+  let oceanBase = height * 0.45;
   let wildness = currentWildness;
 
   noStroke();
-  fill(7, 20, 38, 195 + wildness * 45);
-  rect(0, oceanTop, width, height - oceanTop);
+  fill(8, 25, 46, 160 + wildness * 55);
+  rect(0, oceanTop, width + width * 0.35, height - oceanTop);
 
-  drawStormWaveBodies(oceanTop, wildness);
+  drawStormWaveBodies(oceanTop, oceanBase, wildness);
   drawStormBrushField(oceanTop, wildness);
-  drawBrokenReflection(oceanTop, wildness);
+  drawBrokenReflection(oceanBase, wildness);
   drawFoamHighlights(oceanTop, wildness);
 }
 
-function drawStormWaveBodies(oceanTop, wildness) {
+function drawStormWaveBodies(oceanTop, oceanBase, wildness) {
   noStroke();
 
-  let amplitude = map(wildness, 0, 1, 10, height * 0.16);
-  let frequency = map(wildness, 0, 1, 0.008, 0.035);
-  let speed = map(wildness, 0, 1, 1.4, 8.5);
+  let amplitude = map(wildness, 0, 1, 14, height * 0.11);
+  let frequency = map(wildness, 0, 1, 0.007, 0.022);
+  let speed = map(wildness, 0, 1, 1.2, 5.2);
 
-  for (let y = oceanTop; y < height; y += 14) {
+  for (let y = oceanBase - height * 0.03; y < height; y += 18) {
     beginShape();
 
-    let depth = map(y, oceanTop, height, 0, 1);
-    let alpha = map(depth, 0, 1, 80, 210);
-    fill(12, 42 + wildness * 20, 74 + wildness * 25, alpha);
+    let depth = map(y, oceanBase, height, 0, 1);
+    let alpha = map(depth, 0, 1, 95, 215);
+    fill(12, 48 + wildness * 18, 82 + wildness * 22, alpha);
 
     vertex(0, height);
 
-    for (let x = 0; x <= width + 30; x += 18) {
-      let noiseWave = noise(x * frequency, y * 0.01, t * speed) - 0.5;
-      let sineWave = sin(x * frequency * 1.8 + t * speed + y * 0.02);
-      let brokenWave = sin(x * frequency * 4.2 - t * speed * 1.3 + y * 0.035);
+    for (let x = -40; x <= width + width * 0.4; x += 20) {
+      let primaryWave = sin(x * frequency + t * speed + y * 0.012);
+      let secondaryWave = sin(x * frequency * 1.7 - t * speed * 0.8 + y * 0.018);
+      let naturalNoise = noise(x * frequency * 0.7, y * 0.006, t * speed * 0.25) - 0.5;
 
       let wave =
-        noiseWave * amplitude * 1.8 +
-        sineWave * amplitude * 0.6 +
-        brokenWave * amplitude * wildness * 0.45;
+        primaryWave * amplitude * 0.9 +
+        secondaryWave * amplitude * 0.35 +
+        naturalNoise * amplitude * 0.75;
 
-      vertex(x, y + wave * map(depth, 0, 1, 0.45, 1.25));
+      let verticalScale = map(depth, 0, 1, 0.55, 1.18);
+      let yy = y + wave * verticalScale;
+
+      vertex(x, yy);
     }
 
-    vertex(width, height);
+    vertex(width + width * 0.4, height);
     endShape(CLOSE);
   }
 }
@@ -304,41 +341,42 @@ function drawStormBrushField(oceanTop, wildness) {
   rectMode(CENTER);
   noStroke();
 
-  let speedMultiplier = map(wildness, 0, 1, 0.8, 4.8);
-  let verticalChaos = map(wildness, 0, 1, 8, height * 0.13);
-  let rotationAmount = map(wildness, 0, 1, 0.03, 0.42);
+  let speedMultiplier = map(wildness, 0, 1, 0.7, 2.8);
+  let verticalMovement = map(wildness, 0, 1, 6, height * 0.07);
+  let rotationAmount = map(wildness, 0, 1, 0.02, 0.18);
 
   for (let i = 0; i < stormBrushes.length; i++) {
     let b = stormBrushes[i];
     let depth = map(b.y, oceanTop, height, 0, 1);
-    let localNoise = noise(b.x * 0.01, b.y * 0.015, t * (1 + wildness * 4));
-    let yPush = map(localNoise, 0, 1, -verticalChaos, verticalChaos) * b.layer;
-    let xShake = sin(t * 14 + b.noiseOffset) * wildness * 10;
+    let smoothWave = sin(b.x * 0.012 + t * (1.5 + wildness * 3.5) + b.noiseOffset);
+    let localNoise = noise(b.x * 0.006, b.y * 0.01, t * (0.4 + wildness * 1.8)) - 0.5;
+    let yPush = (smoothWave * 0.65 + localNoise * 0.7) * verticalMovement * b.layer;
+    let xDrift = sin(t * 4 + b.noiseOffset) * wildness * 5;
 
     b.x += b.speed * speedMultiplier;
 
-    if (b.x > width + b.w) {
+    if (b.x > width + width * 0.4 + b.w) {
       b.x = -b.w;
-      b.y = random(oceanTop, height);
+      b.y = random(height * 0.38, height);
     }
 
-    let brushW = b.w * map(wildness, 0, 1, 0.8, 1.45);
-    let brushH = b.h * map(wildness, 0, 1, 0.8, 1.8);
-    let angle = sin(t * 5 + b.noiseOffset) * rotationAmount;
+    let brushW = b.w * map(wildness, 0, 1, 0.85, 1.25);
+    let brushH = b.h * map(wildness, 0, 1, 0.85, 1.35);
+    let angle = sin(t * 2.4 + b.noiseOffset) * rotationAmount;
 
     let c;
-    if (b.colourPick < 0.34) {
-      c = color(8, 28, 55, map(depth, 0, 1, 80, 190));
-    } else if (b.colourPick < 0.68) {
-      c = color(20, 70 + wildness * 35, 110 + wildness * 45, map(depth, 0, 1, 55, 165));
+    if (b.colourPick < 0.38) {
+      c = color(9, 34, 62, map(depth, 0, 1, 85, 175));
+    } else if (b.colourPick < 0.72) {
+      c = color(24, 76 + wildness * 18, 112 + wildness * 22, map(depth, 0, 1, 55, 145));
     } else if (b.colourPick < 0.9) {
-      c = color(76, 116, 138, map(depth, 0, 1, 40, 130));
+      c = color(82, 124, 145, map(depth, 0, 1, 35, 105));
     } else {
-      c = color(225, 229, 208, map(wildness, 0, 1, 35, 155));
+      c = color(225, 229, 208, map(wildness, 0, 1, 25, 115));
     }
 
     push();
-    translate(b.x + xShake, b.y + yPush);
+    translate(b.x + xDrift, b.y + yPush);
     rotate(angle);
     fill(c);
     rect(0, 0, brushW, brushH, brushH);
@@ -373,37 +411,42 @@ function drawBrokenReflection(oceanTop, wildness) {
 }
 
 function drawFoamHighlights(oceanTop, wildness) {
-  if (wildness < 0.18) return;
+  if (wildness < 0.2) return;
 
-  stroke(235, 238, 220, map(wildness, 0.18, 1, 35, 150));
-  strokeWeight(map(wildness, 0.18, 1, 1, 3));
+  stroke(235, 238, 220, map(wildness, 0.2, 1, 25, 115));
+  strokeWeight(map(wildness, 0.2, 1, 1, 2.2));
   noFill();
 
-  let lines = int(map(wildness, 0.18, 1, 8, 34));
+  let lines = int(map(wildness, 0.2, 1, 6, 20));
 
   for (let i = 0; i < lines; i++) {
-    let y = random(oceanTop + 20, height - 10);
-    let xStart = random(width);
-    let length = random(width * 0.04, width * 0.18);
+    let y = random(height * 0.39, height - 10);
+    let xStart = random(width + width * 0.35);
+    let length = random(width * 0.06, width * 0.16);
 
     beginShape();
-    for (let x = 0; x < length; x += 12) {
-      let yy = y + sin(x * 0.08 + t * 8 + i) * random(2, 10) * wildness;
+    for (let x = 0; x < length; x += 14) {
+      let yy = y + sin(x * 0.065 + t * 4.5 + i) * random(1.5, 5.5) * wildness;
       vertex(xStart + x, yy);
     }
     endShape();
   }
 }
 
-function drawRevealEdge() {
-  if (oceanReveal <= 1 || oceanReveal >= width - 1) return;
+function drawWaveFrontEdge(frontX) {
+  if (frontX <= -20 || frontX >= width + 40) return;
 
-  noStroke();
-  for (let i = 0; i < 45; i++) {
-    let alpha = map(i, 0, 45, 75, 0);
-    fill(235, 238, 220, alpha);
-    rect(oceanReveal - i, height * 0.45, 1, height * 0.55);
+  let oceanBase = height * 0.45;
+  noFill();
+  stroke(225, 229, 208, 70);
+  strokeWeight(2);
+
+  beginShape();
+  for (let x = frontX - width * 0.16; x <= frontX + 16; x += 14) {
+    let edgeY = oceanBase + sin(x * 0.018 + t * 3.2) * 18 + (noise(x * 0.008, t * 0.8) - 0.5) * 35;
+    vertex(x, edgeY);
   }
+  endShape();
 }
 
 function drawMicDebug() {
@@ -411,7 +454,7 @@ function drawMicDebug() {
   fill(255, 220);
   textSize(14);
 
-  if (!micStarted && oceanReveal <= 1) {
+  if (!micStarted && !stormLeaving && oceanFront <= 1) {
     text("click START MIC to let the storm ocean enter", 30, 75);
   } else if (!micStarted) {
     text("mic off: storm layer is leaving the painting", 30, 75);
@@ -423,6 +466,6 @@ function drawMicDebug() {
 
 function resizeAudioMechanic() {
   createOceanBrushes();
-  oceanReveal = constrain(oceanReveal, 0, width);
-  targetOceanReveal = micStarted ? width : 0;
+  oceanFront = constrain(oceanFront, 0, width + width * 0.18);
+  targetOceanFront = micStarted ? width + width * 0.18 : 0;
 }
