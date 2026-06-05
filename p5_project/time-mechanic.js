@@ -167,7 +167,6 @@ class TimeMechanic {
     this.drawSun(sceneState);
     this.drawStars(sceneState);
     this.drawSkyGrain(sceneState);
-    this.drawSeaPlaceholder(sceneState);
     this.drawLighthouse(sceneState);
     this.drawBoat(sceneState);
   }
@@ -474,14 +473,6 @@ class TimeMechanic {
       stroke(255, 244, 220, grainAlpha);
       point(x, y);
     }
-  }
-
-  drawSeaPlaceholder(sceneState) {
-    // Temporary sea area placeholder. Detailed sea motion can be handled by the Perlin mechanic later.
-    // The horizon is set at 45% of the canvas height, leaving 55% of the screen for the sea.
-    noStroke();
-    fill(7, 18, 31);
-    rect(0, sceneState.horizonY, width, height - sceneState.horizonY);
   }
 
   drawBoat(sceneState) {
