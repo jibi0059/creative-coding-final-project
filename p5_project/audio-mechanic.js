@@ -127,6 +127,19 @@ function drawMicDebug() {
   }
 }
 
+function drawMoon() {
+  noStroke();
+  fill(230, 225, 190);
+  circle(width * 0.5, height * 0.25, min(width, height) * 0.09);
+
+  // soft glow
+  fill(230, 225, 190, 35);
+  circle(width * 0.5, height * 0.25, min(width, height) * 0.16);
+
+  fill(230, 225, 190, 18);
+  circle(width * 0.5, height * 0.25, min(width, height) * 0.24);
+}
+
 function createCalmOceanBrushes() {
   calmBrushes = [];
 
