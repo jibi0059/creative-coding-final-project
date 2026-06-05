@@ -1,26 +1,102 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Moonlight Drift</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/addons/p5.sound.min.js"></script>
-  <script src="time-mechanic.js"></script>
-  <script src="audio-mechanic.js"></script>
-  <script src="perlin-mechanic.js"></script>
-  <script src="input-mechanic.js"></script>
-  <script src="sketch.js" defer></script>
-</head>
-<body>
-  <div id="mechanic-toggles" aria-label="Development mechanic preview toggles">
-    <label><input type="checkbox" id="toggle-audio" checked> Audio</label>
-    <label><input type="checkbox" id="toggle-perlin" checked> Perlin</label>
-    <label><input type="checkbox" id="toggle-input" checked> Input</label>
-    <label><input type="checkbox" id="toggle-time" checked> Time</label>
-  </div>
+let mechanicToggles = {
+  audio: true,
+  perlin: true,
+  input: true,
+  time: true
+};
 
-  <main id="sketch-holder" aria-label="Moonlight Drift p5.js canvas"></main>
-</body>
-</html>
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  setupMechanicToggles();
+
+  if (typeof setupAudioMechanic === "function") {
+    setupAudioMechanic();
+  }
+
+  if (typeof setupPerlinMechanic === "function") {
+    setupPerlinMechanic();
+  }
+
+  if (typeof setupInputMechanic === "function") {
+    setupInputMechanic();
+  }
+
+  if (typeof setupTimeMechanic === "function") {
+    setupTimeMechanic();
+  }
+}
+
+function draw() {
+  background(8, 12, 28);
+
+  if (mechanicToggles.time && typeof drawTimeMechanic === "function") {
+    drawTimeMechanic();
+  }
+
+  if (mechanicToggles.perlin && typeof drawPerlinMechanic === "function") {
+    drawPerlinMechanic();
+  }
+
+  if (mechanicToggles.input && typeof drawInputMechanic === "function") {
+    drawInputMechanic();
+  }
+
+  if (mechanicToggles.audio && typeof drawAudioMechanic === "function") {
+    drawAudioMechanic();
+  }
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+
+  if (typeof resizeAudioMechanic === "function") {
+    resizeAudioMechanic();
+  }
+
+  if (typeof resizePerlinMechanic === "function") {
+    resizePerlinMechanic();
+  }
+
+  if (typeof resizeInputMechanic === "function") {
+    resizeInputMechanic();
+  }
+
+  if (typeof resizeTimeMechanic === "function") {
+    resizeTimeMechanic();
+  }
+}
+
+function setupMechanicToggles() {
+  const audioToggle = document.getElementById("toggle-audio");
+  const perlinToggle = document.getElementById("toggle-perlin");
+  const inputToggle = document.getElementById("toggle-input");
+  const timeToggle = document.getElementById("toggle-time");
+
+  if (audioToggle) {
+    mechanicToggles.audio = audioToggle.checked;
+    audioToggle.addEventListener("change", function () {
+      mechanicToggles.audio = audioToggle.checked;
+    });
+  }
+
+  if (perlinToggle) {
+    mechanicToggles.perlin = perlinToggle.checked;
+    perlinToggle.addEventListener("change", function () {
+      mechanicToggles.perlin = perlinToggle.checked;
+    });
+  }
+
+  if (inputToggle) {
+    mechanicToggles.input = inputToggle.checked;
+    inputToggle.addEventListener("change", function () {
+      mechanicToggles.input = inputToggle.checked;
+    });
+  }
+
+  if (timeToggle) {
+    mechanicToggles.time = timeToggle.checked;
+    timeToggle.addEventListener("change", function () {
+      mechanicToggles.time = timeToggle.checked;
+    });
+  }
+}
