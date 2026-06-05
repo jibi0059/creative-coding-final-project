@@ -14,10 +14,6 @@ let stormLeaving = false;
 let currentIntensity = 0.08;
 let targetIntensity = 0.08;
 
-let stars = [];
-let currentStarEnergy = 0.15;
-let targetStarEnergy = 0.15;
-
 let calmBrushes = [];
 let stormBrushes = [];
 let stormWaveLayers = [];
@@ -30,7 +26,6 @@ function setupAudioMechanic() {
   micButton.position(30, 30);
   micButton.mousePressed(toggleMic);
 
-  createStars();
   createCalmOceanBrushes();
   createStormOceanSystem();
 }
@@ -41,7 +36,6 @@ function drawAudioMechanic() {
   updateSoundLevel();
   updateOceanTransition();
 
-  drawStars();
   drawMoon();
   drawCalmOcean();
   drawStormOceanLayer();
@@ -131,64 +125,6 @@ function drawMicDebug() {
     text("mic level: " + nf(rawMicLevel, 1, 4), 30, 75);
     text("wave energy: " + nf(currentIntensity, 1, 2), 30, 95);
   }
-}
-
-function createStars() {
-  stars = [];
-
-  for (let i = 0; i < 90; i++) {
-    stars.push({
-      x: random(width),
-      y: random(height * 0.05, height * 0.42),
-      size: random(1, 3),
-      blinkSpeed: random(0.02, 0.08),
-      growSpeed: random(0.01, 0.04),
-      offset: random(TWO_PI),
-      growOffset: random(TWO_PI)
-    });
-  }
-}
-
-function drawStars() {
-  if (micStarted) {
-    targetStarEnergy = constrain(map(smoothedSound, 0, 1, 0.15, 1.0), 0.15, 1.0);
-  } else {
-    targetStarEnergy = 0.15;
-  }
-
-  currentStarEnergy = lerp(currentStarEnergy, targetStarEnergy, 0.08);
-
-  noStroke();
-
-  for (let i = 0; i < stars.length; i++) {
-    let star = stars[i];
-
-    let blink = sin(frameCount * star.blinkSpeed * (1 + currentStarEnergy * 4) + star.offset);
-    let grow = sin(frameCount * star.growSpeed + star.growOffset);
-
-    let brightness = map(blink, -1, 1, 35, 180 + currentStarEnergy * 75);
-    let randomGrowth = map(grow, -1, 1, 0.6, 1.8);
-    let starCoreSize = star.size * randomGrowth + currentStarEnergy * 1.2;
-    let glowRadius = starCoreSize * (2.4 + currentStarEnergy * 2.8);
-
-    fill(255, 255, 255, brightness * 0.18);
-    circle(star.x, star.y, glowRadius);
-
-    fill(255, 255, 255, brightness);
-    circle(star.x, star.y, starCoreSize);
-  }
-}
-
-function drawMoon() {
-  noStroke();
-  fill(230, 225, 190);
-  circle(width * 0.5, height * 0.25, min(width, height) * 0.09);
-
-  fill(230, 225, 190, 35);
-  circle(width * 0.5, height * 0.25, min(width, height) * 0.16);
-
-  fill(230, 225, 190, 18);
-  circle(width * 0.5, height * 0.25, min(width, height) * 0.24);
 }
 
 function createCalmOceanBrushes() {
@@ -501,7 +437,6 @@ function drawMoonReflection(oceanTop, intensity) {
 }
 
 function resizeAudioMechanic() {
-  createStars();
   createCalmOceanBrushes();
   createStormOceanSystem();
   oceanFront = constrain(oceanFront, 0, width + width * 0.25);
