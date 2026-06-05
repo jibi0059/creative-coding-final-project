@@ -7,14 +7,13 @@ let rawMicLevel = 0;
 let smoothedSound = 0;
 let soundEnergy = 0;
 
-let oceanFront = 0;
-let oceanTail = 0;
+let stormOpacity = 0;
+let targetStormOpacity = 0;
 let stormLeaving = false;
 
 let currentIntensity = 0.08;
 let targetIntensity = 0.08;
 
-let calmBrushes = [];
 let stormBrushes = [];
 let stormWaveLayers = [];
 let foamBrushes = [];
@@ -26,18 +25,13 @@ function setupAudioMechanic() {
   micButton.position(30, 30);
   micButton.mousePressed(toggleMic);
 
-  createCalmOceanBrushes();
   createStormOceanSystem();
 }
 
 function drawAudioMechanic() {
-  background(8, 12, 28);
-
   updateSoundLevel();
   updateOceanTransition();
 
-  drawMoon();
-  drawCalmOcean();
   drawStormOceanLayer();
   drawMicDebug();
 
@@ -53,8 +47,13 @@ function toggleMic() {
       micStarted = true;
       micButton.html("MIC OFF");
       stormLeaving = false;
-      oceanTail = 0;
-      oceanFront = max(oceanFront, width * 0.03);
+      targetStormOpacity = 1;
+
+      // The storm layer fades in across the whole ocean instead of sweeping in from the side.
+      for (let i = 0; i < stormWaveLayers.length; i++) {
+        stormWaveLayers[i].tail = -width * 0.15;
+        stormWaveLayers[i].front = width * 1.15;
+      }
     });
   } else {
     mic.stop();
@@ -64,6 +63,7 @@ function toggleMic() {
     soundEnergy = 0;
     targetIntensity = 0.08;
     stormLeaving = true;
+    targetStormOpacity = 0;
     micButton.html("START MIC");
   }
 }
@@ -75,7 +75,7 @@ function updateSoundLevel() {
     rawMicLevel = mic.getLevel();
   }
 
-  let boostedSound = constrain(rawMicLevel * 42, 0, 1);
+  let boostedSound = constrain(rawMicLevel, 0, 1);
 
   if (boostedSound > soundEnergy) {
     soundEnergy = boostedSound;
@@ -85,7 +85,7 @@ function updateSoundLevel() {
   smoothedSound = lerp(smoothedSound, soundEnergy, 0.13);
 
   if (micStarted) {
-    targetIntensity = constrain(map(smoothedSound, 0, 1, 0.12, 0.92), 0.12, 0.92);
+    targetIntensity = constrain(map(smoothedSound, 0.01, 0.35, 0.08, 1), 0.08, 1);
   } else {
     targetIntensity = 0.08;
   }
@@ -93,23 +93,58 @@ function updateSoundLevel() {
   currentIntensity = lerp(currentIntensity, targetIntensity, 0.075);
 }
 
-function updateOceanTransition() {
-  if (micStarted) {
-    // Mic on: the storm ocean grows from the left and covers the calm ocean.
-    oceanFront = lerp(oceanFront, width + width * 0.25, 0.018);
-    oceanTail = 0;
-  } else if (stormLeaving) {
-    // Mic off: the storm ocean keeps flowing to the right and leaves the calm ocean behind.
-    oceanTail = lerp(oceanTail, width + width * 0.25, 0.022);
-    oceanFront = width + width * 0.25;
+function getWaveHeightEnergy() {
+  // Smooth staged wave height response.
+  // Low mic levels create gentle raised waves.
+  // The tallest waves are only reached when the mic level approaches around 0.35.
+  let e = constrain(currentIntensity, 0, 1);
 
-    if (oceanTail > width + width * 0.12) {
-      stormLeaving = false;
-      oceanFront = 0;
-      oceanTail = 0;
-      currentIntensity = 0.08;
-    }
+  if (e < 0.3) {
+    let amt = smoothstep(0.08, 0.3, e);
+    return lerp(0.18, 0.38, amt);
+  } else if (e < 0.7) {
+    let amt = smoothstep(0.3, 0.7, e);
+    return lerp(0.38, 0.72, amt);
+  } else {
+    let amt = smoothstep(0.7, 1, e);
+    return lerp(0.72, 1.15, amt);
   }
+}
+
+function smoothstep(edge0, edge1, x) {
+  let amt = constrain((x - edge0) / (edge1 - edge0), 0, 1);
+  return amt * amt * (3 - 2 * amt);
+}
+
+function getWaveSpeedEnergy() {
+  // Very slow staged flow speed response.
+  // Sound still affects speed, but the ocean now moves like heavy water instead of racing.
+  let e = constrain(currentIntensity, 0, 1);
+
+  if (e < 0.3) {
+    return map(e, 0, 0.3, 0.075, 0.30);
+  } else if (e < 0.7) {
+    return map(e, 0.3, 0.7, 0.30, 0.90);
+  } else {
+    return map(e, 0.7, 1, 0.90, 1.75);
+  }
+}
+
+function updateOceanTransition() {
+  // Smooth fade transition instead of left/right sweep.
+  // Mic on: storm layer fades in as a calm sea, then reacts to sound.
+  // Mic off: waves calm down and fade out.
+  stormOpacity = lerp(stormOpacity, targetStormOpacity, 0.035);
+
+  if (stormOpacity < 0.01 && !micStarted) {
+    stormOpacity = 0;
+    stormLeaving = false;
+    currentIntensity = 0.08;
+  }
+}
+
+function getStormPresence() {
+  return stormOpacity;
 }
 
 function drawMicDebug() {
@@ -118,46 +153,15 @@ function drawMicDebug() {
   textSize(14);
 
   if (!micStarted && !stormLeaving) {
-    text("click START MIC, allow permission, then clap", 30, 75);
+    text("audio storm ocean: click START MIC", 30, 75);
   } else if (!micStarted && stormLeaving) {
-    text("mic off: storm waves leaving to the right", 30, 75);
+    text("audio storm ocean: calming and fading out", 30, 75);
   } else {
     text("mic level: " + nf(rawMicLevel, 1, 4), 30, 75);
-    text("wave energy: " + nf(currentIntensity, 1, 2), 30, 95);
+    text("storm wave energy: " + nf(currentIntensity, 1, 2), 30, 95);
   }
 }
 
-function drawMoon() {
-  noStroke();
-  fill(230, 225, 190);
-  circle(width * 0.5, height * 0.25, min(width, height) * 0.09);
-
-  // soft glow
-  fill(230, 225, 190, 35);
-  circle(width * 0.5, height * 0.25, min(width, height) * 0.16);
-
-  fill(230, 225, 190, 18);
-  circle(width * 0.5, height * 0.25, min(width, height) * 0.24);
-}
-
-function createCalmOceanBrushes() {
-  calmBrushes = [];
-
-  let oceanTop = height * 0.45;
-  let shorter = min(width, height);
-
-  for (let i = 0; i < 520; i++) {
-    calmBrushes.push({
-      x: random(width),
-      y: random(oceanTop, height),
-      w: random(shorter * 0.012, shorter * 0.055),
-      h: random(2, 7),
-      speed: random(0.12, 0.42),
-      noiseOffset: random(1000),
-      colourPick: random()
-    });
-  }
-}
 
 function createStormOceanSystem() {
   stormBrushes = [];
@@ -171,23 +175,31 @@ function createStormOceanSystem() {
     let depth = i / (layerCount - 1);
 
     stormWaveLayers.push({
-      baseY: map(depth, 0, 1, height * 0.36, height * 0.94),
-      baseAmp: map(depth, 0, 1, height * 0.035, height * 0.085) * random(0.8, 1.35),
-      soundAmp: map(depth, 0, 1, height * 0.065, height * 0.17) * random(0.7, 1.45),
-      wavelength: random(width * 0.28, width * 0.56),
-      speed: random(0.55, 1.55),
+      // Slightly higher placement so the ocean sits more naturally in the composition.
+      baseY: map(depth, 0, 1, height * 0.48, height * 0.96),
+      baseAmp: map(depth, 0, 1, height * 0.03, height * 0.075) * random(0.85, 1.25),
+      soundAmp: map(depth, 0, 1, height * 0.07, height * 0.18) * random(0.75, 1.35),
+      wavelength: random(width * 0.34, width * 0.68),
+      speed: random(0.45, 1.25),
       phase: random(TWO_PI),
-      noiseScale: random(0.0022, 0.006),
-      noiseStrength: random(0.35, 0.95),
+      noiseScale: random(0.0018, 0.0045),
+      noiseStrength: random(0.28, 0.75),
       colourType: random(),
-      xDrift: random(-width * 0.12, width * 0.12)
+      xDrift: random(-width * 0.12, width * 0.12),
+      front: width * 1.15,
+      tail: -width * 0.15,
+      enterSpeed: random(0.012, 0.026),
+      leaveSpeed: random(0.016, 0.034),
+      activeWidth: random(width * 0.7, width * 1.25),
+      flowOffset: random(width),
+      foamOffset: random(width)
     });
   }
 
   for (let i = 0; i < 520; i++) {
     stormBrushes.push({
       x: random(width * 1.35),
-      y: random(height * 0.34, height),
+      y: random(height * 0.55, height),
       w: random(shorter * 0.012, shorter * 0.065),
       h: random(2, 8),
       speed: random(0.35, 1.45),
@@ -208,147 +220,129 @@ function createStormOceanSystem() {
   }
 }
 
-function drawCalmOcean() {
-  let oceanTop = height * 0.45;
-
-  noStroke();
-  fill(14, 35, 62, 235);
-  rect(0, oceanTop, width, height - oceanTop);
-
-  drawCalmWaveBands(oceanTop);
-  drawCalmBrushField(oceanTop);
-  drawMoonReflection(oceanTop, 0.12);
-}
-
-function drawCalmWaveBands(oceanTop) {
-  noStroke();
-
-  for (let y = oceanTop; y < height; y += 18) {
-    beginShape();
-
-    let depth = map(y, oceanTop, height, 0, 1);
-    fill(24, 58, 88, map(depth, 0, 1, 70, 180));
-
-    vertex(0, height);
-
-    for (let x = 0; x <= width + 20; x += 24) {
-      let wave = sin(x * 0.008 + t * 1.2 + y * 0.015) * map(depth, 0, 1, 2, 8);
-      vertex(x, y + wave);
-    }
-
-    vertex(width, height);
-    endShape(CLOSE);
-  }
-}
-
-function drawCalmBrushField(oceanTop) {
-  rectMode(CENTER);
-  noStroke();
-
-  for (let i = 0; i < calmBrushes.length; i++) {
-    let b = calmBrushes[i];
-    let depth = map(b.y, oceanTop, height, 0, 1);
-    let drift = sin(t * 1.5 + b.noiseOffset) * 4;
-    let yWave = sin(b.x * 0.01 + t + b.noiseOffset) * map(depth, 0, 1, 1, 7);
-
-    b.x += b.speed;
-    if (b.x > width + b.w) {
-      b.x = -b.w;
-      b.y = random(oceanTop, height);
-    }
-
-    let c;
-    if (b.colourPick < 0.45) {
-      c = color(28, 68, 102, map(depth, 0, 1, 45, 125));
-    } else if (b.colourPick < 0.8) {
-      c = color(44, 84, 112, map(depth, 0, 1, 35, 105));
-    } else {
-      c = color(190, 198, 177, map(depth, 0, 1, 18, 55));
-    }
-
-    fill(c);
-    rect(b.x + drift, b.y + yWave, b.w, b.h, b.h);
-  }
-
-  rectMode(CORNER);
-}
 
 function drawStormOceanLayer() {
-  if (oceanFront <= 1 && !stormLeaving) return;
+  if (stormOpacity <= 0.01 && !micStarted && !stormLeaving) return;
 
   push();
   drawingContext.save();
+  drawingContext.globalAlpha = stormOpacity;
   drawingContext.beginPath();
 
-  let leftEdge = oceanTail;
-  let rightEdge = oceanFront;
-
-  // The mask only controls where the storm ocean appears. The storm itself is made of individual wave layers.
-  drawingContext.rect(leftEdge, height * 0.28, rightEdge - leftEdge, height * 0.72);
+  // Let storm waves rise freely instead of being cut off at a fixed height.
+  drawingContext.rect(0, 0, width, height);
   drawingContext.clip();
 
-  drawStormBase(leftEdge, rightEdge);
-  drawStormBrushField(leftEdge, rightEdge);
+  drawStormBrushFieldFromLayers();
 
   for (let i = 0; i < stormWaveLayers.length; i++) {
-    drawSingleStormWave(stormWaveLayers[i], i, leftEdge, rightEdge);
+    updateSingleStormWaveMotion(stormWaveLayers[i], i);
+    drawSingleStormWave(stormWaveLayers[i], i);
   }
 
-  drawFoamBrushes(leftEdge, rightEdge);
-  drawMoonReflection(height * 0.42, currentIntensity);
+  drawFoamBrushes();
 
   drawingContext.restore();
   pop();
 }
 
-function drawStormBase(leftEdge, rightEdge) {
-  noStroke();
-  fill(5, 18, 36, 218);
-  rect(leftEdge - 2, height * 0.28, rightEdge - leftEdge + 4, height * 0.72);
+function updateSingleStormWaveMotion(layer, index) {
+  let flowSpeed = layer.speed * getWaveSpeedEnergy();
+  layer.flowOffset += flowSpeed * width * 0.006;
+  layer.foamOffset += flowSpeed * 1.2;
+
+  // Keep each wave layer covering the full scene. Transition is now handled by opacity.
+  layer.tail = -width * 0.15;
+  layer.front = width * 1.15;
 }
 
-function drawStormBrushField(leftEdge, rightEdge) {
+// function drawStormBaseFromLayers() {
+//   let furthestFront = 0;
+//   let earliestTail = width;
+//
+//   for (let i = 0; i < stormWaveLayers.length; i++) {
+//     furthestFront = max(furthestFront, stormWaveLayers[i].front);
+//     earliestTail = min(earliestTail, stormWaveLayers[i].tail);
+//   }
+//
+//   if (furthestFront <= 0) return;
+//
+//   noStroke();
+//   fill(5, 18, 36, 185);
+//   rect(max(0, earliestTail), height * 0.34, min(width, furthestFront) - max(0, earliestTail), height * 0.66);
+// }
+
+function drawStormBrushFieldFromLayers() {
   rectMode(CENTER);
   noStroke();
 
-  let speedMultiplier = map(currentIntensity, 0, 1, 0.45, 2.0);
-  let verticalMovement = map(currentIntensity, 0, 1, 3, height * 0.04);
+  let speedMultiplier = getWaveSpeedEnergy() * 0.55;
+  let verticalMovement = map(getWaveHeightEnergy(), 0, 1.15, 3, height * 0.035);
 
   for (let i = 0; i < stormBrushes.length; i++) {
     let b = stormBrushes[i];
+    let layer = stormWaveLayers[i % stormWaveLayers.length];
+
+    if (b.x < layer.tail + width * 0.03 || b.x > layer.front - width * 0.03) continue;
+
     let depth = map(b.y, height * 0.34, height, 0, 1);
-    let smoothWave = sin(b.x * 0.012 + t * (1.1 + currentIntensity * 2.0) + b.noiseOffset);
+    let smoothWave = sin(b.x * 0.012 + t * 0.8 + b.noiseOffset);
+
+    let waveHeightEnergy = getWaveHeightEnergy();
+    let amp = layer.baseAmp + layer.soundAmp * waveHeightEnergy;
+    let waveY = getStormWaveY(layer, b.x - layer.flowOffset, amp, layer.wavelength, layer.speed);
+
+    // Keep brush strokes attached to the body of the wave.
     let yPush = smoothWave * verticalMovement * b.layer;
+    let brushY = waveY + map(depth, 0, 1, 8, 90) + yPush;
+
+    // Skip anything that drifts above the wave crest.
+    if (brushY < waveY + 4) continue;
 
     b.x += b.speed * speedMultiplier;
 
     if (b.x > width * 1.35 + b.w) {
       b.x = -b.w;
-      b.y = random(height * 0.34, height);
+      b.y = random(height * 0.55, height);
     }
 
     let c;
     if (b.colourPick < 0.45) {
-      c = color(8, 34, 66, map(depth, 0, 1, 80, 175));
+      c = color(8, 34, 66, map(depth, 0, 1, 70, 155));
     } else if (b.colourPick < 0.82) {
-      c = color(22, 72 + currentIntensity * 18, 108 + currentIntensity * 28, map(depth, 0, 1, 55, 145));
+      c = color(22, 72 + currentIntensity * 14, 108 + currentIntensity * 22, map(depth, 0, 1, 45, 125));
     } else {
-      c = color(190, 205, 198, map(currentIntensity, 0, 1, 18, 72));
+      c = color(190, 205, 198, map(currentIntensity, 0, 1, 12, 55));
     }
 
-    fill(c);
-    rect(b.x, b.y + yPush, b.w, b.h, b.h);
+    // Louder waves become brighter.
+    let brightnessBoost = map(waveHeightEnergy, 0.18, 1.15, 0, 45);
+
+    fill(
+      min(red(c) + brightnessBoost, 255),
+      min(green(c) + brightnessBoost, 255),
+      min(blue(c) + brightnessBoost, 255),
+      alpha(c)
+    );
+
+    rect(b.x, brushY, b.w, b.h, b.h);
   }
 
   rectMode(CORNER);
 }
 
-function drawSingleStormWave(layer, index, leftEdge, rightEdge) {
+function drawSingleStormWave(layer, index) {
+  let leftEdge = layer.tail;
+  let rightEdge = layer.front;
+
+  if (rightEdge < 0 || leftEdge > width) return;
+
   let depth = index / max(stormWaveLayers.length - 1, 1);
-  let amp = layer.baseAmp + layer.soundAmp * currentIntensity;
-  let speed = layer.speed * map(currentIntensity, 0, 1, 0.8, 1.95);
-  let wavelength = layer.wavelength * map(currentIntensity, 0, 1, 1.16, 0.82);
-  let localOffset = layer.xDrift + t * speed * width * 0.035;
+  let waveHeightEnergy = getWaveHeightEnergy();
+  let amp = layer.baseAmp + layer.soundAmp * waveHeightEnergy;
+  let speed = layer.speed * getWaveSpeedEnergy();
+  let wavelength = layer.wavelength;
+  let localOffset = layer.xDrift - layer.flowOffset;
 
   let waveColour;
   if (layer.colourType < 0.38) {
@@ -377,22 +371,22 @@ function drawSingleStormWave(layer, index, leftEdge, rightEdge) {
 }
 
 function getStormWaveY(layer, x, amp, wavelength, speed) {
-  let mainWave = sin((x / wavelength) * TWO_PI + layer.phase + t * speed) * amp;
-  let secondWave = sin((x / (wavelength * 0.47)) * TWO_PI - layer.phase + t * speed * 0.62) * amp * 0.26;
-  let randomWave = (noise(x * layer.noiseScale, layer.baseY * 0.005, t * 0.28 * speed) - 0.5) * amp * layer.noiseStrength;
+  let mainWave = sin((x / wavelength) * TWO_PI + layer.phase) * amp;
+  let secondWave = sin((x / (wavelength * 0.58)) * TWO_PI - layer.phase) * amp * 0.22;
+  let randomWave = (noise(x * layer.noiseScale, layer.baseY * 0.005, t * 0.08) - 0.5) * amp * layer.noiseStrength * 0.75;
 
   // Louder sound makes waves taller and more violent, not visually tighter.
-  let peakLift = pow(max(0, mainWave / max(amp, 1)), 2.25) * amp * currentIntensity * 0.85;
+  let peakLift = pow(max(0, mainWave / max(amp, 1)), 2.15) * amp * getWaveHeightEnergy() * 0.55;
 
   return layer.baseY - mainWave - secondWave - randomWave - peakLift;
 }
 
 function drawStormCrestFoam(layer, amp, wavelength, speed, leftEdge, rightEdge, localOffset) {
-  if (currentIntensity < 0.22) return;
+  if (getWaveHeightEnergy() < 0.25) return;
 
   noStroke();
 
-  let foamAmount = int(map(currentIntensity, 0.22, 1, 3, 16));
+  let foamAmount = int(map(getWaveHeightEnergy(), 0.25, 1.15, 3, 18));
 
   for (let i = 0; i < foamAmount; i++) {
     let x = random(leftEdge, rightEdge);
@@ -405,53 +399,39 @@ function drawStormCrestFoam(layer, amp, wavelength, speed, leftEdge, rightEdge, 
   }
 }
 
-function drawFoamBrushes(leftEdge, rightEdge) {
-  if (currentIntensity < 0.26) return;
+function drawFoamBrushes() {
+  if (getWaveHeightEnergy() < 0.28) return;
 
   rectMode(CENTER);
   noStroke();
 
-  let visibleWidth = max(rightEdge - leftEdge, 1);
-  let foamCount = int(map(currentIntensity, 0.26, 1, 25, 130));
+  let foamCount = int(map(getWaveHeightEnergy(), 0.28, 1.15, 25, 135));
 
   for (let i = 0; i < foamCount; i++) {
     let f = foamBrushes[i % foamBrushes.length];
     let layer = stormWaveLayers[f.layerIndex % stormWaveLayers.length];
 
-    let amp = layer.baseAmp + layer.soundAmp * currentIntensity;
-    let speed = layer.speed * map(currentIntensity, 0, 1, 0.8, 1.95);
-    let wavelength = layer.wavelength * map(currentIntensity, 0, 1, 1.16, 0.82);
-    let x = leftEdge + ((f.xRatio * width + t * 42 + i * 17) % visibleWidth);
+    let visibleWidth = max(layer.front - layer.tail, 1);
+    if (visibleWidth <= 2) continue;
+
+    let waveHeightEnergy = getWaveHeightEnergy();
+    let amp = layer.baseAmp + layer.soundAmp * waveHeightEnergy;
+    let speed = layer.speed * getWaveSpeedEnergy();
+    let wavelength = layer.wavelength;
+    let x = layer.tail + ((f.xRatio * width + layer.foamOffset + i * 17) % visibleWidth);
+
+    if (x < layer.tail || x > layer.front) continue;
+
     let y = getStormWaveY(layer, x, amp, wavelength, speed) + random(-4, 12);
 
-    fill(230, 236, 224, f.alpha * map(currentIntensity, 0.26, 1, 0.45, 1.25));
-    rect(x, y, f.size * random(1.3, 3.5), f.size * random(0.35, 0.75), f.size);
+    fill(230, 236, 224, f.alpha * map(getWaveHeightEnergy(), 0.28, 1.15, 0.38, 1.1));
+    rect(x, y, f.size * random(1.2, 3.0), f.size * random(0.3, 0.7), f.size);
   }
 
   rectMode(CORNER);
 }
 
-function drawMoonReflection(oceanTop, intensity) {
-  let centerX = width * 0.5;
-
-  for (let i = 0; i < 45; i++) {
-    let y = oceanTop + 18 + i * 10;
-    let spread = map(i, 0, 45, 20, 170);
-    let shimmer = sin(t * 8 + i * 0.7) * intensity * 50;
-
-    stroke(230, 225, 190, map(i, 0, 45, 105, 5) * map(intensity, 0, 1, 0.8, 0.38));
-    strokeWeight(map(i, 0, 45, 3, 1));
-
-    let x1 = centerX - spread * 0.5 + shimmer;
-    let x2 = centerX + spread * 0.5 + shimmer;
-
-    line(x1, y, x2, y);
-  }
-}
 
 function resizeAudioMechanic() {
-  createCalmOceanBrushes();
   createStormOceanSystem();
-  oceanFront = constrain(oceanFront, 0, width + width * 0.25);
-  oceanTail = constrain(oceanTail, 0, width + width * 0.25);
 }
