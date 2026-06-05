@@ -21,6 +21,9 @@ let dragDistanceSincePress = 0;  // Accumulated mouse travel; distinguishes tap 
 let waterRipples = [];  // Expanding ring effects spawned by tapping the ocean
 let paintedStars = [];  // Twinkling stars spawned by tapping the sky
 
+let boatX = 0;           // Current boat x position; set to centre in setup
+let boatFollowing = false; // Whether the boat is tracking the mouse
+
 // Each stroke: { points: [{x, y}], r, g, b, alpha }
 // Each ripple: { x, y, radius, maxRadius, growSpeed }
 // Each star:   { x, y, size, alpha, twinkleOffset }
@@ -38,6 +41,9 @@ function setupInputMechanic() {
 
   // Hide the system cursor so the brush circle on the overlay replaces it
   document.body.style.cursor = 'none';
+
+  // Place the boat at the horizontal centre of the screen on load
+  boatX = windowWidth / 2;
 }
 
 function drawInputMechanic() {
@@ -46,6 +52,7 @@ function drawInputMechanic() {
   // Clear the overlay each frame and redraw everything at its current alpha value
   ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
+  drawBoat();
   overlayUpdateRipples();
   overlayUpdateStars();
   overlayFadeStrokes();
@@ -260,6 +267,13 @@ function mousePressed(event) {
   // Use native event.button: 0 = left click. Avoids relying on p5.js LEFT constant.
   if (event && event.button !== 0) return;
 
+  // Clicking on the boat toggles whether it follows the mouse.
+  // Return early so the click does not also start a paint stroke.
+  if (isHoveringBoat()) {
+    boatFollowing = !boatFollowing;
+    return;
+  }
+
   isPainting = true;
   dragDistanceSincePress = 0;
   let col = sceneColourAt(mouseX, mouseY);
@@ -322,6 +336,126 @@ function keyPressed() {
     paintedStars    = [];
     activeStroke    = null;
   }
+}
+
+// ── Boat ─────────────────────────────────────────────────────────────────────
+
+// Returns true when the cursor is within the boat's clickable area
+function isHoveringBoat() {
+  let horizonY = height * 0.45;
+  return Math.abs(mouseX - boatX) < 38 && mouseY > horizonY - 82 && mouseY < horizonY + 20;
+}
+
+// Moves the boat (only when following is active) and draws it on the ocean surface
+function drawBoat() {
+  let horizonY = height * 0.45;
+
+  // Drift toward the mouse only while following is switched on
+  if (boatFollowing) {
+    boatX = lerp(boatX, mouseX, 0.04);
+  }
+
+  // Gentle vertical bob driven by a slow sine wave to simulate waves rocking the hull
+  let bob = Math.sin(frameCount * 0.025) * 3.5;
+  let x   = boatX;
+  let y   = horizonY + bob;
+
+  // Reflection is drawn first so the hull sits on top of it
+  drawBoatReflection(x, y);
+  drawBoatSilhouette(x, y);
+
+  // Draw a faint ring hint when the cursor hovers over the boat
+  if (isHoveringBoat()) {
+    ctx.beginPath();
+    ctx.arc(x, y - 30, 52, 0, Math.PI * 2);
+    ctx.strokeStyle = boatFollowing
+      ? 'rgba(255,200,100,0.35)'   // amber ring when active
+      : 'rgba(180,210,240,0.28)';  // cool ring when idle
+    ctx.lineWidth = 1.2;
+    ctx.setLineDash([4, 5]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+// Draws a shimmering reflection of the hull and lantern below the waterline
+function drawBoatReflection(x, y) {
+  // Dark horizontal strokes that waver with the wave motion, fading with depth
+  for (let i = 0; i < 7; i++) {
+    let waver = Math.sin(frameCount * 0.04 + i * 0.8) * 6;
+    let halfW = Math.max(0, 24 - i * 3);
+    let lineY = y + 18 + i * 5;
+    let alpha = 0.18 - i * 0.022;
+
+    ctx.beginPath();
+    ctx.moveTo(x - halfW + waver, lineY);
+    ctx.lineTo(x + halfW + waver, lineY);
+    ctx.strokeStyle = `rgba(20,38,62,${alpha.toFixed(3)})`;
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+  }
+
+  // Warm amber glow from the lantern reflected on the water directly below
+  let reflGlow = ctx.createRadialGradient(x - 4, y + 22, 0, x - 4, y + 22, 28);
+  reflGlow.addColorStop(0, 'rgba(255,195,90,0.14)');
+  reflGlow.addColorStop(1, 'rgba(255,195,90,0)');
+  ctx.beginPath();
+  ctx.arc(x - 4, y + 22, 28, 0, Math.PI * 2);
+  ctx.fillStyle = reflGlow;
+  ctx.fill();
+}
+
+// Draws the boat silhouette: hull, mast, sail, and lantern
+function drawBoatSilhouette(x, y) {
+  // Hull — dark navy silhouette with bezier-curved sides to look like a proper hull
+  ctx.beginPath();
+  ctx.moveTo(x - 32, y - 2);
+  ctx.lineTo(x + 32, y - 2);
+  ctx.bezierCurveTo(x + 38, y - 2, x + 36, y + 14, x + 22, y + 16);
+  ctx.lineTo(x - 22, y + 16);
+  ctx.bezierCurveTo(x - 36, y + 14, x - 38, y - 2, x - 32, y - 2);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(12,18,32,0.92)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(35,52,75,0.8)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Mast — thin vertical pole rising from the hull
+  ctx.beginPath();
+  ctx.moveTo(x - 4, y - 3);
+  ctx.lineTo(x - 4, y - 78);
+  ctx.strokeStyle = 'rgba(18,28,48,0.9)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Sail — muted blue-grey triangle, slightly lighter than the hull to catch moonlight
+  ctx.beginPath();
+  ctx.moveTo(x - 4, y - 78);
+  ctx.lineTo(x - 4, y - 10);
+  ctx.lineTo(x + 34, y - 38);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(45,62,88,0.72)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(60,82,110,0.45)';
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
+
+  // Lantern glow at the mast tip — warm amber matching the moon's colour palette
+  let lanternGlow = ctx.createRadialGradient(x - 4, y - 78, 0, x - 4, y - 78, 20);
+  lanternGlow.addColorStop(0,   'rgba(255,200,100,0.48)');
+  lanternGlow.addColorStop(0.5, 'rgba(255,188,82,0.18)');
+  lanternGlow.addColorStop(1,   'rgba(255,180,70,0)');
+  ctx.beginPath();
+  ctx.arc(x - 4, y - 78, 20, 0, Math.PI * 2);
+  ctx.fillStyle = lanternGlow;
+  ctx.fill();
+
+  // Bright lantern point — small dot at the very tip of the mast
+  ctx.beginPath();
+  ctx.arc(x - 4, y - 78, 2.5, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,222,145,0.95)';
+  ctx.fill();
 }
 
 function resizeInputMechanic() {
