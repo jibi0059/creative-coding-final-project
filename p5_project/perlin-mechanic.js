@@ -1,4 +1,4 @@
-
+const PERLIN_SEA_TOP_RATIO = 0.5;
 
 
 let perlinLayer;
