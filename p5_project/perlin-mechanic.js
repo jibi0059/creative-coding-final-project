@@ -1,9 +1,9 @@
 const SEA_TOP_RATIO = 0.5;
-
+const TIME_STEP = 0.006;
 
 let perlinLayer;
 let painter;
-
+let time = 0;
 
 function setupPerlinMechanic() {
   perlinLayer = createGraphics(width, height);
@@ -29,6 +29,7 @@ function drawPerlinMechanic() {
   painter.move();
   painter.paint();
 
+  time += TIME_STEP;
   image(perlinLayer, 0, 0);
 }
 
@@ -40,18 +41,24 @@ class OceanPainter {
     this.y = random(seaTop, height);
     this.size = 30;
     this.speed = 3;
+    this.seed = random(1000);
+    //aim to move to different routes
   }
   move() {
-    this.x += this.speed;
-
-    if (this.x > width) {
-      this.x = 0;
-      //if it goes off the right side, it reappears from the left side.
-    }
+    const noiseValue = noise(
+      this.x * 0.004,
+      this.y * 0.008,
+      time + this.seed
+    );
+    const angle = map(noiseValue, 0, 1, -PI * 0.15, PI * 0.15);
+      this.x += cos(angle) * this.speed;
+      this.y += sin(angle) * this.speed;
+    //move up and down randomly
   }
    paint() {
     perlinLayer.fill(80, 160, 220, 80);
     perlinLayer.ellipse(this.x, this.y, this.size * 2.5, this.size * 0.18);
+
   }
 }
 
