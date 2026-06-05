@@ -1,7 +1,13 @@
-
+let mechanicToggles = {
+  audio: true,
+  perlin: true,
+  input: true,
+  time: true
+};
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
+  setupMechanicToggles();
 
   // Larry's audio mechanic
   if (typeof setupAudioMechanic === "function") {
@@ -27,24 +33,24 @@ function setup() {
 function draw() {
   background(8, 12, 28);
 
+  // Time mechanic
+  if (mechanicToggles.time && typeof drawTimeMechanic === "function") {
+    drawTimeMechanic();
+  }
+
   // Perlin noise mechanic
-  if (typeof drawPerlinMechanic === "function") {
+  if (mechanicToggles.perlin && typeof drawPerlinMechanic === "function") {
     drawPerlinMechanic();
   }
 
   // Input mechanic
-  if (typeof drawInputMechanic === "function") {
+  if (mechanicToggles.input && typeof drawInputMechanic === "function") {
     drawInputMechanic();
-  }
-
-  // Time mechanic
-  if (typeof drawTimeMechanic === "function") {
-    drawTimeMechanic();
   }
 
   // Larry's audio mechanic
   // Keep this near the end so audio reactions can sit on top visually if needed.
-  if (typeof drawAudioMechanic === "function") {
+  if (mechanicToggles.audio && typeof drawAudioMechanic === "function") {
     drawAudioMechanic();
   }
 }
@@ -70,5 +76,40 @@ function windowResized() {
   // Time mechanic
   if (typeof resizeTimeMechanic === "function") {
     resizeTimeMechanic();
+  }
+}
+
+function setupMechanicToggles() {
+  const audioToggle = document.getElementById("toggle-audio");
+  const perlinToggle = document.getElementById("toggle-perlin");
+  const inputToggle = document.getElementById("toggle-input");
+  const timeToggle = document.getElementById("toggle-time");
+
+  if (audioToggle) {
+    mechanicToggles.audio = audioToggle.checked;
+    audioToggle.addEventListener("change", function () {
+      mechanicToggles.audio = audioToggle.checked;
+    });
+  }
+
+  if (perlinToggle) {
+    mechanicToggles.perlin = perlinToggle.checked;
+    perlinToggle.addEventListener("change", function () {
+      mechanicToggles.perlin = perlinToggle.checked;
+    });
+  }
+
+  if (inputToggle) {
+    mechanicToggles.input = inputToggle.checked;
+    inputToggle.addEventListener("change", function () {
+      mechanicToggles.input = inputToggle.checked;
+    });
+  }
+
+  if (timeToggle) {
+    mechanicToggles.time = timeToggle.checked;
+    timeToggle.addEventListener("change", function () {
+      mechanicToggles.time = timeToggle.checked;
+    });
   }
 }
