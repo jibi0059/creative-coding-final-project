@@ -645,12 +645,38 @@ class TimeMechanic {
     const svgBaseY = 744;
     const svgCenterX = 527.5;
     const scale = towerHeight / svgVisibleHeight;
-    const towerColor = color(255, 255, 255);
-    const landColor = color(46, 49, 63);
+    const towerColor = this.getLighthouseBodyColor(sceneState);
+    const landColor = this.getLighthouseLandColor(sceneState);
+    const lanternX = lighthouseX;
+    const lanternY = baseY + (169 - svgBaseY) * scale;
 
     push();
+    this.drawLighthouseNightLight(sceneState, lanternX, lanternY, scale);
     this.drawSvgLighthouse(lighthouseX, baseY, scale, svgCenterX, svgBaseY, towerColor, landColor);
+    this.drawLighthouseLampGlow(sceneState, lanternX, lanternY, scale);
     pop();
+  }
+
+  getLighthouseBodyColor(sceneState) {
+    // The tower remains white, but it is tinted by the current environment light.
+    // Daylight keeps it bright; night light cools and darkens it so it belongs to the scene.
+    const nightWhite = color(116, 128, 148);
+    const twilightWhite = color(205, 204, 194);
+    const dayWhite = color(255, 255, 255);
+    const twilightAmount = sceneState.twilightAmount;
+
+    if (sceneState.dayAmount > 0.55) {
+      return lerpColor(twilightWhite, dayWhite, sceneState.dayAmount);
+    }
+
+    return lerpColor(nightWhite, twilightWhite, twilightAmount);
+  }
+
+  getLighthouseLandColor(sceneState) {
+    // The land stays deep grey, with a small lift in daylight and a cooler tone at night.
+    const nightLand = color(24, 27, 37);
+    const dayLand = color(46, 49, 63);
+    return lerpColor(nightLand, dayLand, sceneState.dayAmount);
   }
 
   drawSvgLighthouse(originX, baseY, scale, svgCenterX, svgBaseY, towerColor, landColor) {
@@ -686,7 +712,116 @@ class TimeMechanic {
 
     rect(svgX(475), svgY(133), 15 * scale, 62 * scale);
     rect(svgX(567), svgY(133), 14 * scale, 62 * scale);
+
+    this.drawLighthouseVolumeShadow(svgX, svgY, scale, towerColor);
+
+    fill(red(towerColor) * 0.72, green(towerColor) * 0.72, blue(towerColor) * 0.72, 245);
     rect(svgX(513), svgY(159), 29 * scale, 36 * scale, 10 * scale, 10 * scale, 0, 0);
+  }
+
+  drawLighthouseVolumeShadow(svgX, svgY, scale, towerColor) {
+    // Soft side shadows suggest that the lighthouse body is cylindrical rather than a flat cut-out.
+    // The shadow follows the right edge of the tower and stays subtle so the tower still reads as white.
+    const shadowRed = red(towerColor) * 0.55;
+    const shadowGreen = green(towerColor) * 0.58;
+    const shadowBlue = blue(towerColor) * 0.65;
+
+    noStroke();
+    fill(shadowRed, shadowGreen, shadowBlue, 42);
+    beginShape();
+    vertex(svgX(548), svgY(226));
+    vertex(svgX(574.552), svgY(224));
+    vertex(svgX(609), svgY(583));
+    vertex(svgX(565), svgY(583));
+    endShape(CLOSE);
+
+    fill(shadowRed, shadowGreen, shadowBlue, 24);
+    beginShape();
+    vertex(svgX(527), svgY(226));
+    vertex(svgX(548), svgY(226));
+    vertex(svgX(565), svgY(583));
+    vertex(svgX(535), svgY(583));
+    endShape(CLOSE);
+
+    fill(shadowRed, shadowGreen, shadowBlue, 28);
+    rect(svgX(570), svgY(112), 21 * scale, 21 * scale);
+    rect(svgX(570), svgY(195), 20 * scale, 29 * scale);
+  }
+
+  drawLighthouseNightLight(sceneState, lanternX, lanternY, scale) {
+    // Real lighthouse lamps are most useful after dark, so the beam fades out through daylight.
+    // The beam sweeps low across the sea, pivoting from the lantern rather than pointing into the sky.
+    const nightVisibility = constrain(map(sceneState.nightAmount, 0.55, 1, 0, 1), 0, 1);
+
+    if (nightVisibility <= 0.01) {
+      return;
+    }
+
+    const nightProgress = sceneState.cycleProgress >= 0.76
+      ? map(sceneState.cycleProgress, 0.76, 1, 0, 0.72)
+      : map(sceneState.cycleProgress, 0, 0.12, 0.72, 1);
+    const rotation = nightProgress * TWO_PI * 2;
+    const sweep = sin(rotation);
+    const facingViewer = pow(0.5 + 0.5 * cos(rotation), 1.4);
+    const beamAngle = PI - 0.72 + sweep * 0.28;
+    const beamLength = width * (0.34 + facingViewer * 0.18);
+    const beamThickness = height * (0.055 + facingViewer * 0.035);
+    const endX = lanternX + cos(beamAngle) * beamLength;
+    const endY = lanternY + sin(beamAngle) * beamLength;
+    const normalX = -sin(beamAngle);
+    const normalY = cos(beamAngle);
+    const ctx = drawingContext;
+
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.filter = `blur(${max(10, scale * 24)}px)`;
+
+    const beamGradient = ctx.createLinearGradient(lanternX, lanternY, endX, endY);
+    beamGradient.addColorStop(0, `rgba(255, 244, 198, ${0.28 * nightVisibility})`);
+    beamGradient.addColorStop(0.35, `rgba(255, 232, 155, ${0.18 * nightVisibility * facingViewer})`);
+    beamGradient.addColorStop(1, "rgba(255, 232, 155, 0)");
+
+    ctx.fillStyle = beamGradient;
+    ctx.beginPath();
+    ctx.moveTo(lanternX, lanternY);
+    ctx.quadraticCurveTo(
+      lerp(lanternX, endX, 0.45) + normalX * beamThickness * 0.45,
+      lerp(lanternY, endY, 0.45) + normalY * beamThickness * 0.45,
+      endX + normalX * beamThickness,
+      endY + normalY * beamThickness
+    );
+    ctx.lineTo(endX - normalX * beamThickness, endY - normalY * beamThickness);
+    ctx.quadraticCurveTo(
+      lerp(lanternX, endX, 0.45) - normalX * beamThickness * 0.45,
+      lerp(lanternY, endY, 0.45) - normalY * beamThickness * 0.45,
+      lanternX,
+      lanternY
+    );
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  drawLighthouseLampGlow(sceneState, lanternX, lanternY, scale) {
+    // The lamp glow is soft and local; the long beam is drawn separately behind the tower body.
+    const nightVisibility = constrain(map(sceneState.nightAmount, 0.55, 1, 0, 1), 0, 1);
+
+    if (nightVisibility <= 0.01) {
+      return;
+    }
+
+    const nightProgress = sceneState.cycleProgress >= 0.76
+      ? map(sceneState.cycleProgress, 0.76, 1, 0, 0.72)
+      : map(sceneState.cycleProgress, 0, 0.12, 0.72, 1);
+    const rotation = nightProgress * TWO_PI * 2;
+    const facingViewer = pow(0.5 + 0.5 * cos(rotation), 1.4);
+
+    const glowRadius = scale * 46;
+    const glowAlpha = nightVisibility * (95 + facingViewer * 95);
+    fill(255, 231, 154, glowAlpha);
+    circle(lanternX, lanternY, glowRadius);
+    fill(255, 248, 211, nightVisibility * 230);
+    circle(lanternX, lanternY, scale * 18);
   }
 }
 
