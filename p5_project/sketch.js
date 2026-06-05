@@ -43,15 +43,15 @@ function draw() {
     drawPerlinMechanic();
   }
 
+  // Input mechanic
+  if (mechanicToggles.input && typeof drawInputMechanic === "function") {
+    drawInputMechanic();
+  }
+
   // Larry's audio mechanic
   // Keep this near the end so audio reactions can sit on top visually if needed.
   if (mechanicToggles.audio && typeof drawAudioMechanic === "function") {
     drawAudioMechanic();
-  }
-
-  // Input mechanic — must draw last so brush strokes sit on top of the scene
-  if (mechanicToggles.input && typeof drawInputMechanic === "function") {
-    drawInputMechanic();
   }
 }
 
