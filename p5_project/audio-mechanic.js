@@ -7,8 +7,8 @@ let rawMicLevel = 0;
 let smoothedSound = 0;
 let soundEnergy = 0;
 
-let oceanFront = 0;
-let oceanTail = 0;
+let stormOpacity = 0;
+let targetStormOpacity = 0;
 let stormLeaving = false;
 
 let currentIntensity = 0.08;
@@ -47,8 +47,13 @@ function toggleMic() {
       micStarted = true;
       micButton.html("MIC OFF");
       stormLeaving = false;
-      oceanTail = 0;
-      oceanFront = max(oceanFront, width * 0.03);
+      targetStormOpacity = 1;
+
+      // The storm layer fades in across the whole ocean instead of sweeping in from the side.
+      for (let i = 0; i < stormWaveLayers.length; i++) {
+        stormWaveLayers[i].tail = -width * 0.15;
+        stormWaveLayers[i].front = width * 1.15;
+      }
     });
   } else {
     mic.stop();
@@ -58,6 +63,7 @@ function toggleMic() {
     soundEnergy = 0;
     targetIntensity = 0.08;
     stormLeaving = true;
+    targetStormOpacity = 0;
     micButton.html("START MIC");
   }
 }
@@ -125,42 +131,20 @@ function getWaveSpeedEnergy() {
 }
 
 function updateOceanTransition() {
-  if (micStarted) {
-    // Global values stay for compatibility, but each wave layer now enters individually.
-    oceanFront = lerp(oceanFront, width + width * 0.25, 0.018);
-    oceanTail = 0;
-  } else if (stormLeaving) {
-    oceanTail = lerp(oceanTail, width + width * 0.25, 0.022);
-    oceanFront = width + width * 0.25;
+  // Smooth fade transition instead of left/right sweep.
+  // Mic on: storm layer fades in as a calm sea, then reacts to sound.
+  // Mic off: waves calm down and fade out.
+  stormOpacity = lerp(stormOpacity, targetStormOpacity, 0.035);
 
-    let allLayersGone = true;
-    for (let i = 0; i < stormWaveLayers.length; i++) {
-      if (stormWaveLayers[i].tail < width + width * 0.2) {
-        allLayersGone = false;
-        break;
-      }
-    }
-
-    if (allLayersGone) {
-      stormLeaving = false;
-      oceanFront = 0;
-      oceanTail = 0;
-      currentIntensity = 0.08;
-
-      for (let i = 0; i < stormWaveLayers.length; i++) {
-        stormWaveLayers[i].front = -width * random(0.12, 0.65);
-        stormWaveLayers[i].tail = -width * random(0.35, 0.9);
-      }
-    }
+  if (stormOpacity < 0.01 && !micStarted) {
+    stormOpacity = 0;
+    stormLeaving = false;
+    currentIntensity = 0.08;
   }
 }
 
 function getStormPresence() {
-  if (micStarted || stormLeaving) {
-    return constrain(max(oceanFront, width * 0.03) / width, 0, 1);
-  }
-
-  return 0;
+  return stormOpacity;
 }
 
 function drawMicDebug() {
@@ -171,7 +155,7 @@ function drawMicDebug() {
   if (!micStarted && !stormLeaving) {
     text("audio storm ocean: click START MIC", 30, 75);
   } else if (!micStarted && stormLeaving) {
-    text("audio storm ocean: waves leaving to the right", 30, 75);
+    text("audio storm ocean: calming and fading out", 30, 75);
   } else {
     text("mic level: " + nf(rawMicLevel, 1, 4), 30, 75);
     text("storm wave energy: " + nf(currentIntensity, 1, 2), 30, 95);
@@ -202,8 +186,8 @@ function createStormOceanSystem() {
       noiseStrength: random(0.28, 0.75),
       colourType: random(),
       xDrift: random(-width * 0.12, width * 0.12),
-      front: -width * random(0.12, 0.65),
-      tail: -width * random(0.35, 0.9),
+      front: width * 1.15,
+      tail: -width * 0.15,
       enterSpeed: random(0.012, 0.026),
       leaveSpeed: random(0.016, 0.034),
       activeWidth: random(width * 0.7, width * 1.25),
@@ -238,17 +222,17 @@ function createStormOceanSystem() {
 
 
 function drawStormOceanLayer() {
-  if (!micStarted && !stormLeaving && oceanFront <= 1) return;
+  if (stormOpacity <= 0.01 && !micStarted && !stormLeaving) return;
 
   push();
   drawingContext.save();
+  drawingContext.globalAlpha = stormOpacity;
   drawingContext.beginPath();
 
   // Let storm waves rise freely instead of being cut off at a fixed height.
   drawingContext.rect(0, 0, width, height);
   drawingContext.clip();
 
-  // drawStormBaseFromLayers();
   drawStormBrushFieldFromLayers();
 
   for (let i = 0; i < stormWaveLayers.length; i++) {
@@ -267,16 +251,9 @@ function updateSingleStormWaveMotion(layer, index) {
   layer.flowOffset += flowSpeed * width * 0.006;
   layer.foamOffset += flowSpeed * 1.2;
 
-  if (micStarted) {
-    let targetFront = width + layer.activeWidth * 0.25;
-    let targetTail = -width * 0.05 + index * width * 0.012;
-
-    layer.front = lerp(layer.front, targetFront, layer.enterSpeed * 0.75);
-    layer.tail = lerp(layer.tail, targetTail, layer.enterSpeed * 0.5);
-  } else if (stormLeaving) {
-    layer.front = lerp(layer.front, width + layer.activeWidth, layer.leaveSpeed * 0.45);
-    layer.tail = lerp(layer.tail, width + width * 0.35, layer.leaveSpeed * 0.65);
-  }
+  // Keep each wave layer covering the full scene. Transition is now handled by opacity.
+  layer.tail = -width * 0.15;
+  layer.front = width * 1.15;
 }
 
 // function drawStormBaseFromLayers() {
@@ -457,6 +434,4 @@ function drawFoamBrushes() {
 
 function resizeAudioMechanic() {
   createStormOceanSystem();
-  oceanFront = constrain(oceanFront, 0, width + width * 0.25);
-  oceanTail = constrain(oceanTail, 0, width + width * 0.25);
 }
