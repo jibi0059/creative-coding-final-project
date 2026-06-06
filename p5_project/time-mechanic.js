@@ -160,13 +160,17 @@ class TimeMechanic {
   }
 
   drawSky(sceneState) {
-    // Draw order: sky first, then moon/sun, then grain, then sea placeholder.
-    // The boat is drawn last so it remains readable as a foreground silhouette.
+    // Draw only the background part of the time mechanic here.
+    // Foreground objects are drawn later so teammate clouds and sea can sit behind them.
     this.drawSkyGradient(sceneState);
     this.drawMoon(sceneState);
     this.drawSun(sceneState);
     this.drawStars(sceneState);
     this.drawSkyGrain(sceneState);
+  }
+
+  drawForeground(sceneState) {
+    // Draw foreground time-based objects after teammate sea and cloud layers.
     this.drawLighthouse(sceneState);
     this.drawBoat(sceneState);
   }
@@ -817,6 +821,7 @@ class TimeMechanic {
 }
 
 let timeMechanic;
+let latestTimeSceneState;
 
 function setupTimeMechanic() {
   // Creates one shared instance for sketch.js to call during the main p5 setup phase.
@@ -830,8 +835,21 @@ function drawTimeMechanic() {
     setupTimeMechanic();
   }
 
-  const sceneState = timeMechanic.update();
-  timeMechanic.drawSky(sceneState);
+  latestTimeSceneState = timeMechanic.update();
+  timeMechanic.drawSky(latestTimeSceneState);
+}
+
+function drawTimeForegroundMechanic() {
+  // Draws lighthouse, land, and boat above teammate sea/cloud layers without repainting the sky.
+  if (!timeMechanic) {
+    setupTimeMechanic();
+  }
+
+  if (!latestTimeSceneState) {
+    latestTimeSceneState = timeMechanic.update();
+  }
+
+  timeMechanic.drawForeground(latestTimeSceneState);
 }
 
 function resizeTimeMechanic() {

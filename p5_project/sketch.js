@@ -54,15 +54,20 @@ function draw() {
     drawPerlinMechanic();
   }
 
+  // Larry's audio mechanic
+  // Draw before the time foreground so clouds and sea sit behind the lighthouse.
+  if (mechanicToggles.audio && typeof drawAudioMechanic === "function") {
+    drawAudioMechanic();
+  }
+
+  // Time foreground: lighthouse, land, and boat
+  if (mechanicToggles.time && typeof drawTimeForegroundMechanic === "function") {
+    drawTimeForegroundMechanic();
+  }
+
   // Input mechanic
   if (mechanicToggles.input && typeof drawInputMechanic === "function") {
     drawInputMechanic();
-  }
-
-  // Larry's audio mechanic
-  // Keep this near the end so audio reactions can sit on top visually if needed.
-  if (mechanicToggles.audio && typeof drawAudioMechanic === "function") {
-    drawAudioMechanic();
   }
 }
 
