@@ -884,6 +884,43 @@ class TimeMechanic {
     ctx.closePath();
     ctx.fill();
     ctx.restore();
+
+    const seaSpotX = constrain(endX, width * 0.08, lanternX - width * 0.14);
+    const seaSpotY = constrain(endY, sceneState.horizonY + height * 0.04, height * 0.82);
+    this.drawLighthouseSeaSpot(seaSpotX, seaSpotY, beamThickness, nightVisibility, facingViewer);
+  }
+
+  drawLighthouseSeaSpot(spotX, spotY, beamThickness, nightVisibility, facingViewer) {
+    // Soft elliptical light on the sea where the lighthouse beam lands.
+    // It is brighter than the beam itself, like a concentrated reflection on the water surface.
+    const ctx = drawingContext;
+    const spotWidth = beamThickness * (2.7 + facingViewer * 1.35);
+    const spotHeight = beamThickness * (0.42 + facingViewer * 0.18);
+    const spotAlpha = nightVisibility * (0.34 + facingViewer * 0.34);
+
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.filter = `blur(${max(8, beamThickness * 0.16)}px)`;
+
+    const spotGradient = ctx.createRadialGradient(
+      spotX,
+      spotY,
+      0,
+      spotX,
+      spotY,
+      spotWidth * 0.55
+    );
+
+    spotGradient.addColorStop(0, `rgba(255, 246, 190, ${spotAlpha})`);
+    spotGradient.addColorStop(0.42, `rgba(255, 226, 126, ${spotAlpha * 0.48})`);
+    spotGradient.addColorStop(1, "rgba(255, 226, 126, 0)");
+
+    ctx.fillStyle = spotGradient;
+    ctx.beginPath();
+    ctx.ellipse(spotX, spotY, spotWidth * 0.5, spotHeight * 0.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
   }
 
   drawLighthouseLampGlow(sceneState, lanternX, lanternY, scale) {
