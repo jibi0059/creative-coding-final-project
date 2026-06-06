@@ -1,5 +1,6 @@
 const SEA_TOP_RATIO = 0.5;
 const TIME_STEP = 0.006;
+const FADE_ALPHA = 8;
 const PAINTER_COUNT = 250;
 
 
@@ -11,7 +12,8 @@ function setupPerlinMechanic() {
   perlinLayer = createGraphics(width, height);
   perlinLayer.noStroke();
 
-  
+
+
   resetOcean();
 }
 
@@ -22,18 +24,19 @@ function setupPerlinMechanic() {
 function drawPerlinMechanic() {
   const seaTop = height * SEA_TOP_RATIO;
 // half of the canva is the sea
+  drawOceanBackground(seaTop);
 
-  perlinLayer.noStroke();
-  perlinLayer.fill(20, 80, 140, 35);
-  perlinLayer.rect(0, seaTop, width, height - seaTop);
-  //extent of the sea
+  
+
   for (let painter of painters) {
   painter.move();
   painter.paint();
 
+  }
+
   time += TIME_STEP;
   image(perlinLayer, 0, 0);
-}
+
 }
 
 
@@ -43,9 +46,20 @@ function resetOcean() {
   for (let i = 0; i < PAINTER_COUNT; i++) {
     painters.push(new OceanPainter());
   }
+  //for to draw painters
 }
 
+function drawOceanBackground(seaTop) {
+  perlinLayer.noStroke();
 
+  perlinLayer.fill(8, 12, 28, FADE_ALPHA);
+  perlinLayer.rect(0, seaTop, width, height - seaTop);
+//Trail layer
+
+  perlinLayer.fill(20, 80, 140, 35);
+  perlinLayer.rect(0, seaTop, width, height - seaTop);
+}
+//make sea look like real
 
 
 
@@ -89,7 +103,9 @@ class OceanPainter {
     if (
       this.x > width + 40 || 
       this.x < -40 ||
-      this.y > seaTop ||
+      //disappearing after going off‑screen feels more natural.
+
+      this.y < seaTop ||
       this.y > height ||
       this.age > this.life
     
@@ -102,8 +118,30 @@ class OceanPainter {
   
 
   paint() {
-    perlinLayer.fill(80, 160, 220, 80);
-    perlinLayer.ellipse(this.x, this.y, this.size * 2.5, this.size * 0.18);
+    const seaTop = height * SEA_TOP_RATIO;
+    const depth = map(this.y, seaTop, height, 0, 1, true);
+
+    const noiseValue = noise(
+      this.x * 0.018,
+      this.y * 0.018,
+      time + this.seed
+      //the larger, the more changes
+    );
+    
+    //bright blue to dark blue
+    const r = map(depth, 0, 1, 50, 5);
+    const g = map(depth, 0, 1, 150, 55);
+    const b = map(depth, 0, 1, 210, 120);
+    //gradients enhance realism
+    
+    const alpha = map(noiseValue, 0, 1, 25, 70);
+     //alpha follows noise to change
+    const w = this.size * map(noiseValue, 0, 1, 0.6, 1.6);
+    const h = w * 0.18;
+    //keep waves
+
+    perlinLayer.fill(r, g, b, alpha);
+    perlinLayer.ellipse(this.x, this.y, w * 2.5, h);
 
   }
 }
