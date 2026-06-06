@@ -150,13 +150,6 @@ class OceanPainter {
 
 
 
-
-
-
-
-
-
-
 function resizePerlinMechanic() {
   perlinLayer = createGraphics(width, height);
   perlinLayer.noStroke();
