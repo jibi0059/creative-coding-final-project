@@ -1,6 +1,6 @@
 const SEA_TOP_RATIO = 0.5;
 const TIME_STEP = 0.006;
-const PAINTER_COUNT = 500;
+const PAINTER_COUNT = 250;
 
 
 let perlinLayer;
