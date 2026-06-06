@@ -2,7 +2,11 @@ const SEA_TOP_RATIO = 0.5;
 const TIME_STEP = 0.006;
 const FADE_ALPHA = 8;
 const PAINTER_COUNT = 250;
-
+//test clouds
+const CLOUD_COUNT = 15;
+//test clouds
+let cloudPart;
+let clouds = [];
 
 let perlinLayer;
 let painters = [];
@@ -12,6 +16,10 @@ function setupPerlinMechanic() {
   perlinLayer = createGraphics(width, height);
   perlinLayer.noStroke();
 
+  //test clouds
+  cloudPart = createGraphics(width, height);
+  cloudPart.noStroke();
+  resetClouds();
 
 
   resetOcean();
@@ -25,7 +33,7 @@ function drawPerlinMechanic() {
   const seaTop = height * SEA_TOP_RATIO;
 // half of the canva is the sea
   drawOceanBackground(seaTop);
-
+  drawCloudBackground();
   
 
   for (let painter of painters) {
@@ -34,10 +42,115 @@ function drawPerlinMechanic() {
 
   }
 
-  time += TIME_STEP;
+  
   image(perlinLayer, 0, 0);
 
+
+  //test clouds
+  for (let cloud of clouds) {
+  cloud.move();
+  cloud.paint();
+  }
+
+  image(cloudPart, 0, 0);
+
+
+
+
+  time += TIME_STEP;
 }
+
+
+
+
+//test clouds
+function resetClouds() {
+  clouds = [];
+
+  for (let i = 0; i < CLOUD_COUNT; i++) {
+    clouds.push(new CloudPainter());
+  }
+}
+
+function drawCloudBackground() {
+  cloudPart.clear();
+}
+
+//test clouds
+class CloudPainter {
+  constructor() {
+    this.reset();
+  }
+
+  reset() {
+    const seaTop = height * SEA_TOP_RATIO;
+
+    this.x = random(width);
+    this.y = random(40, seaTop - 40);
+    this.size = random(25, 80);
+    this.speed = random(0.15, 0.6);
+    this.seed = random(1000);
+    this.alpha = random(18, 45);
+  }
+
+  move() {
+    const seaTop = height * SEA_TOP_RATIO;
+
+    const noiseValue = noise(
+      this.x * 0.003,
+      this.y * 0.006,
+      time + this.seed
+    );
+
+    const angle = map(noiseValue, 0, 1, -PI * 0.08, PI * 0.08);
+
+    this.x += cos(angle) * this.speed;
+    this.y += sin(angle) * this.speed * 0.4;
+
+    if (
+      this.x > width + this.size ||
+      this.y < 20 ||
+      this.y > seaTop - 20
+    ) {
+      this.reset();
+      this.x = -this.size;
+    }
+  }
+
+  paint() {
+    const noiseValue = noise(
+      this.x * 0.01,
+      this.y * 0.01,
+      time + this.seed
+    );
+
+    const cloudWidth = this.size * map(noiseValue, 0, 1, 1.2, 2.2);
+    const cloudHeight = this.size * map(noiseValue, 0, 1, 0.25, 0.55);
+
+    cloudPart.fill(0, 0, 100, this.alpha);
+    cloudPart.ellipse(this.x, this.y, cloudWidth, cloudHeight);
+
+    cloudPart.fill(0, 0, 100, this.alpha * 0.7);
+    cloudPart.ellipse(
+      this.x + this.size * 0.25,
+      this.y + this.size * 0.08,
+      cloudWidth * 0.8,
+      cloudHeight * 0.8
+    );
+
+    cloudPart.ellipse(
+      this.x - this.size * 0.3,
+      this.y + this.size * 0.05,
+      cloudWidth * 0.7,
+      cloudHeight * 0.7
+    );
+  }
+}
+
+
+
+
+
 
 
 function resetOcean() {
@@ -153,6 +266,13 @@ class OceanPainter {
 function resizePerlinMechanic() {
   perlinLayer = createGraphics(width, height);
   perlinLayer.noStroke();
-
+  
+  
+  //test clouds
+  cloudPart = createGraphics(width, height);
+  cloudPart.noStroke();
+  
+  resetClouds();
+  
   resetOcean();
 }
