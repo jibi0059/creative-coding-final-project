@@ -27,7 +27,7 @@ function drawPerlinMechanic() {
   perlinLayer.fill(20, 80, 140, 35);
   perlinLayer.rect(0, seaTop, width, height - seaTop);
   //extent of the sea
-  for (let painter of perlinPainters) {
+  for (let painter of painters) {
   painter.move();
   painter.paint();
 
