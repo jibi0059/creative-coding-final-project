@@ -171,6 +171,7 @@ class TimeMechanic {
 
   drawForeground(sceneState) {
     // Draw foreground time-based objects after teammate sea and cloud layers.
+    this.drawCelestialReflections(sceneState);
     this.drawLighthouse(sceneState);
     this.drawBoat(sceneState);
   }
@@ -477,6 +478,53 @@ class TimeMechanic {
       stroke(255, 244, 220, grainAlpha);
       point(x, y);
     }
+  }
+
+  drawCelestialReflections(sceneState) {
+    // Draw sunlight and moonlight reflections after the teammate sea layer.
+    // The reflections follow each body's x-position but break into horizontal fragments on the water.
+    this.drawCelestialReflection(sceneState.sun, sceneState.sun.color, sceneState.sun.visibility * sceneState.dayAmount, sceneState, 1);
+    this.drawCelestialReflection(sceneState.moon, sceneState.moon.color, sceneState.moon.visibility * sceneState.nightAmount, sceneState, 0.62);
+  }
+
+  drawCelestialReflection(body, reflectionColor, visibility, sceneState, strengthMultiplier) {
+    if (visibility <= 0.02) {
+      return;
+    }
+
+    const waterTop = sceneState.horizonY;
+    const distanceFromHorizon = max(0, waterTop - body.y);
+    const reflectionX = body.x;
+    const reflectionTop = waterTop + height * 0.012;
+    const reflectionLength = constrain(distanceFromHorizon * 0.85, height * 0.08, height * 0.34);
+    const baseWidth = body.radius * (1.6 + body.visibility * 1.2);
+    const ctx = drawingContext;
+
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.filter = `blur(${max(2, body.radius * 0.08)}px)`;
+
+    noStroke();
+
+    for (let i = 0; i < 24; i++) {
+      const depth = i / 23;
+      const y = reflectionTop + depth * reflectionLength;
+      const waveShift = sin(frameCount * 0.025 + i * 0.9 + body.x * 0.01) * width * 0.012;
+      const fragmentNoise = 0.55 + 0.45 * sin(i * 1.73 + frameCount * 0.018);
+      const fragmentWidth = baseWidth * lerp(1.35, 0.28, depth) * fragmentNoise;
+      const fragmentHeight = lerp(5, 1.2, depth);
+      const alpha = 120 * visibility * strengthMultiplier * pow(1 - depth, 1.6);
+
+      fill(red(reflectionColor), green(reflectionColor), blue(reflectionColor), alpha);
+      rect(reflectionX + waveShift - fragmentWidth * 0.5, y, fragmentWidth, fragmentHeight, fragmentHeight);
+
+      if (i % 3 === 0) {
+        fill(255, 246, 210, alpha * 0.28);
+        rect(reflectionX + waveShift - fragmentWidth * 0.18, y + fragmentHeight * 0.35, fragmentWidth * 0.36, fragmentHeight * 0.45, fragmentHeight);
+      }
+    }
+
+    ctx.restore();
   }
 
   drawBoat(sceneState) {
