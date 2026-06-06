@@ -49,7 +49,7 @@ class TimeMechanic {
       twilightAmount,
       sun: this.getSunState(cycleProgress, dayAmount, twilightAmount),
       moon: this.getMoonState(cycleProgress, nightAmount),
-      horizonY: height * 0.45
+      horizonY: height * 0.5
     };
   }
 
@@ -482,18 +482,59 @@ class TimeMechanic {
   drawBoat(sceneState) {
     // The boat is controlled by time-based light: warm sunlight by day, cool moonlight by night.
     // Its silhouette remains dark, but the highlight and shadow respond to the active celestial light source.
-    const boatX = width * 0.42;
-    const boatY = sceneState.horizonY + height * 0.22;
-    const boatWidth = width * 0.18;
-    const boatHeight = height * 0.06;
+    const boatState = this.getBoatState(sceneState);
+    const boatX = boatState.x;
+    const boatY = boatState.y;
+    const boatWidth = width * 0.18 * boatState.scale;
+    const boatHeight = height * 0.06 * boatState.scale;
     const lightColor = this.getMainLightColor(sceneState);
     const lightStrength = this.getMainLightStrength(sceneState);
     const lightPosition = this.getMainLightPosition(sceneState);
     const shadowColor = lerpColor(color(3, 5, 9), color(18, 18, 17), sceneState.dayAmount * 0.18);
     const boatColor = lerpColor(shadowColor, lightColor, lightStrength * 0.16);
 
-    this.drawBoatReflection(boatX, boatY, boatWidth, boatHeight, lightColor, lightStrength, lightPosition, sceneState);
-    this.drawBoatShape(boatX, boatY, boatWidth, boatHeight, boatColor, lightColor, lightStrength, 245, true);
+    if (boatState.alpha <= 1) {
+      return;
+    }
+
+    this.drawBoatReflection(boatX, boatY, boatWidth, boatHeight, lightColor, lightStrength, lightPosition, sceneState, boatState.alpha / 255);
+    this.drawBoatShape(boatX, boatY, boatWidth, boatHeight, boatColor, lightColor, lightStrength, boatState.alpha, true);
+  }
+
+  getBoatState(sceneState) {
+    // The boat follows a daily route along the x-axis:
+    // morning departure from the lighthouse, daytime travel off-screen, evening return, and night docking.
+    const progress = sceneState.cycleProgress;
+    const dockX = width * 0.8;
+    const dockY = sceneState.horizonY + height * 0.2;
+    const farX = width * -0.16;
+    let travelAmount = 0;
+    let visibility = 1;
+
+    if (progress < 0.12) {
+      travelAmount = 0;
+    } else if (progress < 0.34) {
+      travelAmount = this.smoothStep(map(progress, 0.12, 0.34, 0, 1));
+    } else if (progress < 0.52) {
+      travelAmount = 1;
+      visibility = 0;
+    } else if (progress < 0.76) {
+      travelAmount = 1 - this.smoothStep(map(progress, 0.52, 0.76, 0, 1));
+    } else {
+      travelAmount = 0;
+    }
+
+    const x = lerp(dockX, farX, travelAmount);
+    const y = dockY;
+    const scale = 1;
+    const alpha = 255 * visibility;
+
+    return {
+      x,
+      y,
+      scale,
+      alpha
+    };
   }
 
   drawBoatShape(boatX, boatY, boatWidth, boatHeight, boatColor, lightColor, lightStrength, alpha, showHighlight) {
@@ -579,7 +620,7 @@ class TimeMechanic {
     return sceneState.moon;
   }
 
-  drawBoatReflection(boatX, boatY, boatWidth, boatHeight, lightColor, lightStrength, lightPosition, sceneState) {
+  drawBoatReflection(boatX, boatY, boatWidth, boatHeight, lightColor, lightStrength, lightPosition, sceneState, boatAlpha) {
     // The reflection shifts opposite the light source, following simple shadow direction logic.
     // This is a stylised water shadow rather than a physically exact reflection.
     const lightDirection = constrain((lightPosition.x - boatX) / width, -1, 1);
@@ -588,7 +629,7 @@ class TimeMechanic {
     const dayReflection = sceneState.sun.visibility * sceneState.dayAmount;
     const nightReflection = sceneState.moon.visibility * sceneState.nightAmount * 0.01;
     const reflectionStrength = constrain(dayReflection + nightReflection, 0, 1);
-    const reflectionAlpha = 14 + 176 * reflectionStrength;
+    const reflectionAlpha = (14 + 176 * reflectionStrength) * boatAlpha;
     const reflectionColor = color(0, 0, 0);
     const shadowScale = this.getShadowScale(sceneState);
 
