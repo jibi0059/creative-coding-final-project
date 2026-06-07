@@ -502,8 +502,73 @@ function maybeSpawnThunder() {
     segments: segments,
     life: 1,
     alpha: random(170, 255),
-    flash: random(45, 90)
+    flash: random(35, 75),
+    glowSize: random(width * 0.18, width * 0.34),
+    glowOffsetX: random(-width * 0.06, width * 0.06),
+    glowOffsetY: random(-height * 0.025, height * 0.045)
   });
+}
+
+
+function drawSoftThunderGlow(b) {
+  noStroke();
+
+  let glowAlpha = b.flash * b.life * stormSkyProgress;
+  let glowX = b.startX + b.glowOffsetX;
+  let glowY = b.startY + b.glowOffsetY + height * 0.05;
+
+  // Layered ellipses create a cloud-like light bloom instead of a hard rectangular flash.
+  for (let i = 0; i < 5; i++) {
+    let amt = i / 4;
+    fill(205, 225, 255, glowAlpha * map(amt, 0, 1, 0.26, 0.035));
+    ellipse(
+      glowX + sin(b.startX * 0.01 + i) * width * 0.025,
+      glowY + cos(b.startY * 0.01 + i) * height * 0.012,
+      b.glowSize * map(amt, 0, 1, 0.7, 2.2),
+      b.glowSize * map(amt, 0, 1, 0.28, 0.85)
+    );
+  }
+
+  // A small local sky flash near the bolt gives impact without showing block edges.
+  fill(230, 240, 255, glowAlpha * 0.16);
+  ellipse(glowX, glowY, b.glowSize * 0.7, b.glowSize * 0.32);
+}
+
+function drawThunderWaterReflection(b) {
+  if (stormOpacity <= 0.01) return;
+
+  noStroke();
+
+  let reflectionAlpha = b.flash * b.life * stormSkyProgress * stormOpacity;
+  let reflectionX = b.startX + b.glowOffsetX * 0.45;
+  let oceanHeight = max(audioSeaBottom - audioSeaTop, 1);
+
+  // Lightning reflection is broken by moving water, so it appears as scattered horizontal shimmer.
+  let shimmerCount = 26;
+  for (let i = 0; i < shimmerCount; i++) {
+    let amt = i / max(shimmerCount - 1, 1);
+    let y = audioSeaTop + oceanHeight * map(amt, 0, 1, 0.04, 0.62);
+    let waveSpread = map(amt, 0, 1, width * 0.035, width * 0.2);
+    let waveNoise = noise(i * 0.22, t * 0.9, b.startX * 0.002);
+    let x = reflectionX + sin(t * 4.8 + i * 0.65) * waveSpread * 0.28 + map(waveNoise, 0, 1, -waveSpread, waveSpread);
+    let w = random(width * 0.018, width * 0.12) * map(amt, 0, 1, 1.05, 0.35);
+    let h = random(1.5, 4.5);
+    let localAlpha = reflectionAlpha * map(amt, 0, 1, 0.42, 0.03);
+
+    fill(190, 220, 255, localAlpha);
+    ellipse(x, y, w, h);
+  }
+
+  // A faint vertical core suggests the lightning line reflected through the wave gaps.
+  for (let i = 0; i < 8; i++) {
+    let y = audioSeaTop + oceanHeight * random(0.05, 0.38);
+    let x = reflectionX + random(-width * 0.035, width * 0.035);
+    let w = random(width * 0.006, width * 0.025);
+    let h = random(2, 5);
+
+    fill(225, 238, 255, reflectionAlpha * random(0.05, 0.14));
+    ellipse(x, y, w, h);
+  }
 }
 
 function updateAndDrawThunderBolts() {
@@ -513,9 +578,8 @@ function updateAndDrawThunderBolts() {
     let b = thunderBolts[i];
     let boltAlpha = b.alpha * b.life * stormSkyProgress;
 
-    noStroke();
-    fill(210, 230, 255, b.flash * b.life * stormSkyProgress);
-    rect(0, 0, width, height * 0.34);
+    drawSoftThunderGlow(b);
+    drawThunderWaterReflection(b);
 
     strokeWeight(random(1.4, 2.8));
     stroke(225, 238, 255, boltAlpha);
