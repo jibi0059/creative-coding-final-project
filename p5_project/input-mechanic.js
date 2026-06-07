@@ -6,6 +6,7 @@ let inputBoatFollowMode = false;
 let inputBoatPos;
 
 let inputWasPressed = false;
+let inputPaused = false;
 
 function setupInputMechanic() {
   inputPos = createVector(0, 0);
@@ -39,7 +40,7 @@ function patchTimeMechanic() {
     if (inputBoatFollowMode) {
       state.x = inputBoatPos.x;
       state.y = inputBoatPos.y;
-      state.alpha = 255; // keep the boat fully visible while dragging
+      state.alpha = 255; // keep boat fully visible while dragging
     }
     return state;
   };
@@ -50,7 +51,7 @@ function patchTimeMechanic() {
 function drawInputMechanic() {
   if (!latestTimeSceneState) return;
 
-  // Re-patch in case timeMechanic was recreated after setup
+  // Re-patch in case timeMechanic was recreated (e.g. after reset)
   patchTimeMechanic();
 
   const sceneState = latestTimeSceneState;
@@ -68,16 +69,12 @@ function drawInputMechanic() {
 
   if (justClicked) {
     if (inputBoatFollowMode) {
-      // Any click while dragging the boat releases it
       inputBoatFollowMode = false;
-
     } else if (inputFollowMode) {
-      // Any click while dragging a celestial body releases it
       inputFollowMode = false;
       inputTargetBody = null;
-
     } else {
-      // Try to grab the boat first (it sits on top visually)
+      // Boat (checked first — sits on top visually)
       if (boatVisible &&
           mouseX > boatState.x - boatW * 0.5 &&
           mouseX < boatState.x + boatW * 0.5 &&
@@ -86,14 +83,12 @@ function drawInputMechanic() {
         inputBoatFollowMode = true;
         inputBoatPos.set(boatState.x, boatState.y);
 
-      // Try to grab sun
       } else if (sun.visibility > 0.1 &&
                  dist(mouseX, mouseY, sun.x, sun.y) < sun.radius * 1.5) {
         inputFollowMode = true;
         inputTargetBody = 'sun';
         inputPos.set(sun.x, sun.y);
 
-      // Try to grab moon
       } else if (moon.visibility > 0.1 &&
                  dist(mouseX, mouseY, moon.x, moon.y) < moon.radius * 1.5) {
         inputFollowMode = true;
@@ -107,7 +102,6 @@ function drawInputMechanic() {
   // ---------- position updates + cursor ----------
   if (inputBoatFollowMode) {
     inputBoatPos.x = lerp(inputBoatPos.x, mouseX, 0.05);
-    // Constrain boat to the sea area
     const seaTargetY = constrain(mouseY, sceneState.horizonY + height * 0.02, height * 0.9);
     inputBoatPos.y = lerp(inputBoatPos.y, seaTargetY, 0.05);
     cursor(HAND);
@@ -121,7 +115,6 @@ function drawInputMechanic() {
     // ---------- hover glows + cursor ----------
     let hovered = false;
 
-    // Boat hover highlight
     if (boatVisible &&
         mouseX > boatState.x - boatW * 0.5 &&
         mouseX < boatState.x + boatW * 0.5 &&
@@ -134,7 +127,6 @@ function drawInputMechanic() {
            boatW, boatH * 2.95, 4);
     }
 
-    // Sun hover glow
     if (sun.visibility > 0.1 && dist(mouseX, mouseY, sun.x, sun.y) < sun.radius * 1.5) {
       hovered = true;
       noStroke();
@@ -142,7 +134,6 @@ function drawInputMechanic() {
       circle(sun.x, sun.y, sun.radius * 3);
     }
 
-    // Moon hover glow
     if (moon.visibility > 0.1 && dist(mouseX, mouseY, moon.x, moon.y) < moon.radius * 1.5) {
       hovered = true;
       noStroke();
@@ -151,6 +142,74 @@ function drawInputMechanic() {
     }
 
     cursor(hovered ? HAND : ARROW);
+  }
+
+  // ---------- pause overlay ----------
+  if (inputPaused) {
+    drawInputPauseOverlay();
+  }
+}
+
+function drawInputPauseOverlay() {
+  push();
+  const pad = 16;
+  const pw = 210;
+  const ph = 62;
+  const px = width - pw - pad;
+  const py = pad;
+
+  noStroke();
+  fill(0, 0, 0, 150);
+  rect(px, py, pw, ph, 8);
+
+  textAlign(CENTER, CENTER);
+  textSize(17);
+  fill(255);
+  text('PAUSED', px + pw / 2, py + ph * 0.34);
+
+  textSize(11);
+  fill(180);
+  text('SPACE  resume    R  reset', px + pw / 2, py + ph * 0.72);
+  pop();
+}
+
+function keyPressed() {
+  // Space — toggle pause / resume
+  if (key === ' ') {
+    inputPaused = !inputPaused;
+    if (inputPaused) {
+      noLoop();
+    } else {
+      loop();
+    }
+    redraw(); // one extra frame to show / hide the pause indicator
+    return false; // prevent the browser from scrolling on spacebar
+  }
+
+  // R — reset the entire scene
+  if (key === 'r' || key === 'R') {
+    // Release all drag states
+    inputFollowMode = false;
+    inputTargetBody = null;
+    inputBoatFollowMode = false;
+
+    // Resume draw loop if it was paused
+    inputPaused = false;
+    loop();
+
+    // Reset perlin ocean and cloud painters to fresh random positions
+    if (typeof resetOcean === 'function') resetOcean();
+    if (typeof resetClouds === 'function') resetClouds();
+
+    // Recreate the time mechanic (fresh star field; sky cycle continues from millis())
+    if (typeof setupTimeMechanic === 'function') {
+      setupTimeMechanic();
+      // Clear patch flag so patchTimeMechanic() will re-apply to the new instance
+      if (typeof timeMechanic !== 'undefined') {
+        timeMechanic._inputPatched = false;
+      }
+      patchTimeMechanic();
+    }
   }
 }
 
