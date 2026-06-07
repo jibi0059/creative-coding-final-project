@@ -222,9 +222,47 @@ function getWaveHeightEnergy() {
   return map(combined, 0, 1, 0.055, 0.58);
 }
 
+
 function smoothstep(edge0, edge1, x) {
   let amt = constrain((x - edge0) / (edge1 - edge0), 0, 1);
   return amt * amt * (3 - 2 * amt);
+}
+
+// Worley noise helpers for painterly water texture
+function hash2D(ix, iy) {
+  // Small deterministic hash for Worley feature points.
+  let n = sin(ix * 127.1 + iy * 311.7) * 43758.5453123;
+  return n - floor(n);
+}
+
+function worleyNoise(x, y, scale) {
+  // Cellular/Worley noise gives the water a broken, painterly surface texture.
+  let sx = x * scale;
+  let sy = y * scale;
+  let cellX = floor(sx);
+  let cellY = floor(sy);
+  let closest = 9999;
+
+  for (let ox = -1; ox <= 1; ox++) {
+    for (let oy = -1; oy <= 1; oy++) {
+      let gx = cellX + ox;
+      let gy = cellY + oy;
+      let px = gx + hash2D(gx, gy);
+      let py = gy + hash2D(gx + 19.19, gy + 73.73);
+      let d = dist(sx, sy, px, py);
+      closest = min(closest, d);
+    }
+  }
+
+  return constrain(closest, 0, 1);
+}
+
+function waterCellTexture(x, y, strength) {
+  // Mix Worley with regular noise so the result feels organic rather than overly digital.
+  let cell = worleyNoise(x + oceanTravel * 0.18, y + t * 18, 0.008);
+  let soft = noise(x * 0.005, y * 0.014, t * 0.25);
+  let mixed = lerp(soft, 1 - cell, 0.45);
+  return map(mixed, 0, 1, -strength, strength);
 }
 
 function getWaveSpeedEnergy() {
@@ -663,6 +701,7 @@ function drawStormOceanLayer() {
     drawSingleStormWave(stormWaveLayers[i], i);
   }
 
+  drawLighthouseShoreBreak();
   drawFoamBrushes();
 
   drawingContext.restore();
@@ -706,16 +745,67 @@ function drawAudioOceanAtmosphere() {
     let strokeH = random(2, 5.5);
     let depthAlpha = map(yRatio, 0, 1, 95, 145);
     let shimmer = noise(x * 0.006, y * 0.012, t * 0.35);
+    let cellTexture = waterCellTexture(x, y, 18);
 
     fill(
-      lerp(oceanPalette.highlight[0], oceanPalette.mid[0], yRatio) + shimmer * 6,
-      lerp(oceanPalette.highlight[1], oceanPalette.mid[1], yRatio) + shimmer * 8,
-      lerp(oceanPalette.highlight[2], oceanPalette.mid[2], yRatio) + shimmer * 10,
+      lerp(oceanPalette.highlight[0], oceanPalette.mid[0], yRatio) + shimmer * 6 + cellTexture * 0.35,
+      lerp(oceanPalette.highlight[1], oceanPalette.mid[1], yRatio) + shimmer * 8 + cellTexture * 0.55,
+      lerp(oceanPalette.highlight[2], oceanPalette.mid[2], yRatio) + shimmer * 10 + cellTexture * 0.75,
       depthAlpha * map(waveMood, 0.09, 0.58, 1.0, 1.35) * max(0.72, strokeReveal)
     );
 
     ellipse(x, y + sin(t * 1.1 + x * 0.01) * 2, strokeW, strokeH);
   }
+
+  // Storm clouds should visually suppress any reflection layer from other mechanics underneath.
+  // This helps when the time mechanic draws its own sun/moon reflection below our audio ocean.
+  if (stormSkyProgress > 0.2) {
+    noStroke();
+    let maskAlpha = map(stormSkyProgress, 0.2, 1, 25, 86);
+    fill(oceanPalette.mid[0] * 0.65, oceanPalette.mid[1] * 0.7, oceanPalette.mid[2] * 0.78, maskAlpha);
+    rect(0, audioSeaTop, width, audioSeaBottom - audioSeaTop);
+  }
+}
+
+function getStormCloudOcclusionForCelestial(celestial) {
+  // During mic-on storm mode, the heavy cloud bank covers the top third of the sky.
+  // Sun/moon reflection should disappear while the light source is behind those clouds,
+  // then return when it moves below the cloud bank near the horizon.
+  if (stormSkyProgress <= 0.01 || !celestial) return 0;
+
+  let celestialX = celestial.x;
+  let celestialY = celestial.y;
+
+  // Be defensive because the time mechanic may name the vertical value differently.
+  if (typeof celestialY !== "number") celestialY = celestial.screenY;
+  if (typeof celestialY !== "number") celestialY = celestial.posY;
+  if (typeof celestialY !== "number") celestialY = celestial.cy;
+
+  // If the time mechanic does not provide y-position, treat storm clouds as blocking most direct light.
+  if (typeof celestialY !== "number") {
+    return stormSkyProgress * 0.92;
+  }
+
+  let cloudTop = height * 0.0;
+  let cloudBottom = height * 0.38;
+  let softEdge = height * 0.13;
+
+  let verticalOcclusion = 0;
+
+  if (celestialY >= cloudTop && celestialY <= cloudBottom) {
+    verticalOcclusion = 1;
+  } else if (celestialY > cloudBottom && celestialY < cloudBottom + softEdge) {
+    verticalOcclusion = 1 - smoothstep(cloudBottom, cloudBottom + softEdge, celestialY);
+  }
+
+  if (verticalOcclusion <= 0) return 0;
+
+  // Slight horizontal variation makes the cloud cover feel natural rather than like a flat mask.
+  let safeX = typeof celestialX === "number" ? celestialX : width * 0.5;
+  let cloudPatch = noise(safeX * 0.004, celestialY * 0.01, t * 0.08);
+  let cloudDensity = map(cloudPatch, 0, 1, 0.86, 1.12);
+
+  return constrain(verticalOcclusion * cloudDensity * stormSkyProgress, 0, 1);
 }
 
 function drawAudioCelestialReflection() {
@@ -727,18 +817,28 @@ function drawAudioCelestialReflection() {
   let reflectionColour = [255, 225, 150];
 
   if (scene.sun && scene.sun.amount > 0.02) {
+    let sunCloudOcclusion = getStormCloudOcclusionForCelestial(scene.sun);
     reflectionX = scene.sun.x;
-    reflectionStrength = scene.sun.amount * max(scene.dayAmount || 0, scene.twilightAmount || 0.35);
+    reflectionStrength = scene.sun.amount * max(scene.dayAmount || 0, scene.twilightAmount || 0.35) * (1 - sunCloudOcclusion);
     reflectionColour = [255, 215, 135];
   }
 
-  if (scene.moon && scene.moon.amount > 0.02 && scene.moon.amount > reflectionStrength) {
-    reflectionX = scene.moon.x;
-    reflectionStrength = scene.moon.amount * max(scene.nightAmount || 0, 0.35);
-    reflectionColour = [195, 215, 245];
+  if (scene.moon && scene.moon.amount > 0.02) {
+    let moonCloudOcclusion = getStormCloudOcclusionForCelestial(scene.moon);
+    let moonReflectionStrength = scene.moon.amount * max(scene.nightAmount || 0, 0.35) * (1 - moonCloudOcclusion);
+
+    if (moonReflectionStrength > reflectionStrength) {
+      reflectionX = scene.moon.x;
+      reflectionStrength = moonReflectionStrength;
+      reflectionColour = [195, 215, 245];
+    }
   }
 
   if (reflectionStrength <= 0.02) return;
+
+// If the light source is mostly behind storm clouds, do not draw a visible reflection.
+
+if (reflectionStrength <= 0.08 && stormSkyProgress > 0.35) return;
 
   noStroke();
 
@@ -859,11 +959,12 @@ function drawStormBrushFieldFromLayers() {
 
     // Louder waves become more visually present, but stay in a cool blue-green palette.
     let brightnessBoost = map(waveHeightEnergy, 0.09, 0.58, 0, 18);
+    let cellTexture = waterCellTexture(b.x, brushY, 16);
 
     fill(
-      min(red(c) + brightnessBoost * 0.45, 255),
-      min(green(c) + brightnessBoost * 0.8, 255),
-      min(blue(c) + brightnessBoost, 255),
+      constrain(red(c) + brightnessBoost * 0.45 + cellTexture * 0.25, 0, 255),
+      constrain(green(c) + brightnessBoost * 0.8 + cellTexture * 0.45, 0, 255),
+      constrain(blue(c) + brightnessBoost + cellTexture * 0.65, 0, 255),
       alpha(c) * max(0.72, brushReveal)
     );
 
@@ -898,6 +999,14 @@ function drawSingleStormWave(layer, index) {
     waveColour = color(oceanPalette.highlight[0] * 0.55, oceanPalette.highlight[1] * 0.58, oceanPalette.highlight[2] * 0.56, map(depth, 0, 1, 145, 215));
   }
 
+  let bodyCellTexture = waterCellTexture(width * depth + layer.flowOffset, layer.baseY, 10);
+  waveColour = color(
+    constrain(red(waveColour) + bodyCellTexture * 0.12, 0, 255),
+    constrain(green(waveColour) + bodyCellTexture * 0.24, 0, 255),
+    constrain(blue(waveColour) + bodyCellTexture * 0.34, 0, 255),
+    alpha(waveColour)
+  );
+
   noStroke();
   fill(red(waveColour), green(waveColour), blue(waveColour), min(255, alpha(waveColour) * max(0.95, layerReveal)));
 
@@ -931,11 +1040,12 @@ function drawPainterlyWaveTexture(layer, index, amp, wavelength, speed, leftEdge
     let markW = random(width * 0.012, width * 0.055) * map(depth, 0, 1, 0.75, 1.25);
     let markH = random(2, 5.5);
     let colourNoise = noise(x * 0.008, y * 0.012, t * 0.28);
+    let cellTexture = waterCellTexture(x, y, 22);
 
     fill(
-      lerp(oceanPalette.highlight[0], oceanPalette.mid[0], depth) + colourNoise * 5,
-      lerp(oceanPalette.highlight[1], oceanPalette.mid[1], depth) + colourNoise * 7,
-      lerp(oceanPalette.highlight[2], oceanPalette.mid[2], depth) + colourNoise * 9,
+      lerp(oceanPalette.highlight[0], oceanPalette.mid[0], depth) + colourNoise * 5 + cellTexture * 0.28,
+      lerp(oceanPalette.highlight[1], oceanPalette.mid[1], depth) + colourNoise * 7 + cellTexture * 0.48,
+      lerp(oceanPalette.highlight[2], oceanPalette.mid[2], depth) + colourNoise * 9 + cellTexture * 0.68,
       random(150, 230) * max(0.95, layerReveal)
     );
 
@@ -1028,4 +1138,69 @@ function resizeAudioMechanic() {
   targetStormSkyProgress = micStarted ? 1 : 0;
   layerRevealProgress = micStarted ? 1 : 0;
   targetLayerRevealProgress = micStarted ? 1 : 0;
+}
+function drawLighthouseShoreBreak() {
+  // The time mechanic places the lighthouse/shore on the right side.
+  // Rather than cutting the waves off, this creates a natural wave-break foam where water meets the shore.
+  if (stormOpacity <= 0.01) return;
+
+  let oceanHeight = max(audioSeaBottom - audioSeaTop, 1);
+  let shoreX = width * 0.86;
+  let shoreTop = audioSeaTop + oceanHeight * 0.18;
+  let shoreBottom = audioSeaBottom + height * 0.04;
+  let waveEnergy = getWaveHeightEnergy();
+  let foamStrength = map(waveEnergy + voicePulse * 0.25 + waveformHeight * 0.25, 0.055, 0.58, 0.35, 1.25);
+
+  push();
+  noStroke();
+
+  // Soft dark edge makes the shore feel like an object cutting into the water without a hard mask.
+  for (let i = 0; i < 8; i++) {
+    let amt = i / 7;
+    let x = lerp(shoreX, width, amt);
+    fill(oceanPalette.deep[0] * 0.65, oceanPalette.deep[1] * 0.72, oceanPalette.deep[2] * 0.82, 34 * stormOpacity * (1 - amt));
+    rect(x, shoreTop, width - x, shoreBottom - shoreTop);
+  }
+
+  // Broken horizontal foam strokes where waves hit the right-side shore.
+  let foamCount = int(map(foamStrength, 0.35, 1.25, 18, 62));
+  for (let i = 0; i < foamCount; i++) {
+    let yRatio = random(0.2, 0.98);
+    let y = audioSeaTop + oceanHeight * yRatio + sin(t * 2.4 + i * 0.5) * height * 0.006;
+    let edgeNoise = noise(i * 0.2, t * 0.55);
+    let x = shoreX + map(edgeNoise, 0, 1, -width * 0.035, width * 0.08);
+    let w = random(width * 0.018, width * 0.11) * map(yRatio, 0, 1, 0.65, 1.25);
+    let h = random(2, 6);
+    let alphaValue = random(70, 175) * foamStrength * stormOpacity;
+
+    fill(oceanPalette.foam[0], oceanPalette.foam[1], oceanPalette.foam[2], alphaValue);
+    ellipse(x, y, w, h);
+  }
+
+  // A few small splashes climb upward near the lighthouse/shore edge during louder sound.
+  let splashCount = int(map(foamStrength, 0.35, 1.25, 3, 18));
+  for (let i = 0; i < splashCount; i++) {
+    let baseY = random(shoreTop + oceanHeight * 0.08, shoreBottom - oceanHeight * 0.08);
+    let splashX = shoreX + random(-width * 0.018, width * 0.035);
+    let splashLift = random(height * 0.01, height * 0.045) * foamStrength;
+    let splashW = random(3, 9);
+    let splashH = random(2, 6);
+
+    fill(oceanPalette.foam[0], oceanPalette.foam[1], oceanPalette.foam[2], random(55, 130) * foamStrength * stormOpacity);
+    ellipse(splashX, baseY - splashLift, splashW, splashH);
+  }
+
+  // Subtle reflected turbulence beside the shore, aligned with left-to-right wave travel.
+  strokeWeight(1);
+  for (let i = 0; i < 16; i++) {
+    let y = random(shoreTop, shoreBottom);
+    let x1 = shoreX - random(width * 0.02, width * 0.11);
+    let x2 = shoreX + random(width * 0.015, width * 0.08);
+    let alphaValue = random(28, 90) * foamStrength * stormOpacity;
+
+    stroke(oceanPalette.highlight[0], oceanPalette.highlight[1], oceanPalette.highlight[2], alphaValue);
+    line(x1, y, x2, y + sin(t * 2 + i) * height * 0.004);
+  }
+
+  pop();
 }
