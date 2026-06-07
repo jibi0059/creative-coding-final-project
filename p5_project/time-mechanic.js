@@ -13,10 +13,17 @@ class TimeMechanic {
     const stars = [];
 
     for (let i = 0; i < 85; i++) {
+      const sizeSeed = this.positiveFraction(sin(i * 31.416) * 9817.23);
+      const starSize = sizeSeed < 0.68
+        ? 0.55 + sizeSeed * 0.95
+        : sizeSeed < 0.92
+          ? 2.1 + (sizeSeed - 0.68) * 9.6
+          : 5.2 + (sizeSeed - 0.92) * 26;
+
       stars.push({
         xRatio: this.positiveFraction(sin(i * 12.9898) * 43758.5453),
         yRatio: 0.04 + this.positiveFraction(cos(i * 78.233) * 24634.6345) * 0.9,
-        size: 1.4 + (i % 4) * 0.45,
+        size: starSize,
         blinkInterval: 1200 + (i % 5) * 420,
         blinkOffset: i * 173
       });
