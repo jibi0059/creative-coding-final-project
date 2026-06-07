@@ -1,3 +1,19 @@
+// input-mechanic.js
+// User Input Mechanic - Jiale Bi
+//
+// Lets the audience drive the scene with the mouse and keyboard.
+// Clicking and dragging the sun or moon scrubs the time-of-day
+// cycle; clicking and dragging the boat repositions it on the
+// sea; SPACE pauses the sketch and R resets it.
+//
+// This mechanic works by "patching" the time mechanic at runtime
+// so mouse input can override the sky while the boat keeps using
+// real time. Parts of this file were developed with assistance
+//
+// AI Acknowledgement
+// I used Claude (AI) to help me plan the overall structure of
+// this mechanic and to review my code for errors. All of the
+// actual code was written and implemented by me.
 let inputFollowMode = false;
 let inputTargetBody = null; // 'sun' or 'moon'
 let inputProgress = 0; // fake cycleProgress controlled by mouse
