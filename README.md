@@ -56,8 +56,8 @@ Perlin Noise is used to create natural and smooth flowing movements for the sea 
 
 ### 🖱️ User Input — Jiale Bi
 
-The User Input mechanic turns the audience's cursor into the **wind that animates Monet's frozen seascape**. As the mouse moves across the canvas, ripples spread outward from the cursor—gentle when slow, turbulent when fast—using mouse velocity to control intensity. Clicking on the water generates expanding concentric ripples that propagate outward and fade, temporarily breaking the moon's golden reflection into shimmering fragments. Clicking on the sky "blows" clouds apart, briefly revealing the moon. Keyboard inputs shift the mood: `1`, `2`, `3` switch between calm moonlight, stormy weather, and pre-dawn warmth; `SPACE` pauses everything; `R` resets the canvas. This mechanic serves our vision of *unfreezing* Monet's painting—the audience becomes a participant who breathes life into the canvas, leaving a unique trail of ripples with every visit.
-
+The User Input mechanic lets the audience directly drive the scene with the mouse and keyboard. Clicking and dragging the sun or moon scrubs the time-of-day cycle forwards or backwards, so the viewer can control sunrise, noon, sunset and night by hand. Clicking and dragging the boat lets the audience reposition it across the sea. A hover highlight shows which element is interactive. Pressing SPACE pauses the entire sketch and R resets the scene. This mechanic 
+connects to our vision of "unfreezing" Monet's painting—instead of watching time pass on its own, the audience physically takes hold of the sun, moon and boat, becoming the author of each moment in the seascape.
 
 ---
 
