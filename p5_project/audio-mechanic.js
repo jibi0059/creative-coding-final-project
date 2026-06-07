@@ -692,7 +692,6 @@ function drawStormOceanLayer() {
   drawingContext.clip();
 
   drawAudioOceanAtmosphere();
-  drawAudioCelestialReflection();
 
   drawStormBrushFieldFromLayers();
 
@@ -757,111 +756,8 @@ function drawAudioOceanAtmosphere() {
     ellipse(x, y + sin(t * 1.1 + x * 0.01) * 2, strokeW, strokeH);
   }
 
-  // Storm clouds should visually suppress any reflection layer from other mechanics underneath.
-  // This helps when the time mechanic draws its own sun/moon reflection below our audio ocean.
-  if (stormSkyProgress > 0.2) {
-    noStroke();
-    let maskAlpha = map(stormSkyProgress, 0.2, 1, 25, 86);
-    fill(oceanPalette.mid[0] * 0.65, oceanPalette.mid[1] * 0.7, oceanPalette.mid[2] * 0.78, maskAlpha);
-    rect(0, audioSeaTop, width, audioSeaBottom - audioSeaTop);
-  }
 }
 
-function getStormCloudOcclusionForCelestial(celestial) {
-  // During mic-on storm mode, the heavy cloud bank covers the top third of the sky.
-  // Sun/moon reflection should disappear while the light source is behind those clouds,
-  // then return when it moves below the cloud bank near the horizon.
-  if (stormSkyProgress <= 0.01 || !celestial) return 0;
-
-  let celestialX = celestial.x;
-  let celestialY = celestial.y;
-
-  // Be defensive because the time mechanic may name the vertical value differently.
-  if (typeof celestialY !== "number") celestialY = celestial.screenY;
-  if (typeof celestialY !== "number") celestialY = celestial.posY;
-  if (typeof celestialY !== "number") celestialY = celestial.cy;
-
-  // If the time mechanic does not provide y-position, treat storm clouds as blocking most direct light.
-  if (typeof celestialY !== "number") {
-    return stormSkyProgress * 0.92;
-  }
-
-  let cloudTop = height * 0.0;
-  let cloudBottom = height * 0.38;
-  let softEdge = height * 0.13;
-
-  let verticalOcclusion = 0;
-
-  if (celestialY >= cloudTop && celestialY <= cloudBottom) {
-    verticalOcclusion = 1;
-  } else if (celestialY > cloudBottom && celestialY < cloudBottom + softEdge) {
-    verticalOcclusion = 1 - smoothstep(cloudBottom, cloudBottom + softEdge, celestialY);
-  }
-
-  if (verticalOcclusion <= 0) return 0;
-
-  // Slight horizontal variation makes the cloud cover feel natural rather than like a flat mask.
-  let safeX = typeof celestialX === "number" ? celestialX : width * 0.5;
-  let cloudPatch = noise(safeX * 0.004, celestialY * 0.01, t * 0.08);
-  let cloudDensity = map(cloudPatch, 0, 1, 0.86, 1.12);
-
-  return constrain(verticalOcclusion * cloudDensity * stormSkyProgress, 0, 1);
-}
-
-function drawAudioCelestialReflection() {
-  if (typeof latestTimeSceneState === "undefined" || !latestTimeSceneState) return;
-
-  let scene = latestTimeSceneState;
-  let reflectionX = width * 0.5;
-  let reflectionStrength = 0;
-  let reflectionColour = [255, 225, 150];
-
-  if (scene.sun && scene.sun.amount > 0.02) {
-    let sunCloudOcclusion = getStormCloudOcclusionForCelestial(scene.sun);
-    reflectionX = scene.sun.x;
-    reflectionStrength = scene.sun.amount * max(scene.dayAmount || 0, scene.twilightAmount || 0.35) * (1 - sunCloudOcclusion);
-    reflectionColour = [255, 215, 135];
-  }
-
-  if (scene.moon && scene.moon.amount > 0.02) {
-    let moonCloudOcclusion = getStormCloudOcclusionForCelestial(scene.moon);
-    let moonReflectionStrength = scene.moon.amount * max(scene.nightAmount || 0, 0.35) * (1 - moonCloudOcclusion);
-
-    if (moonReflectionStrength > reflectionStrength) {
-      reflectionX = scene.moon.x;
-      reflectionStrength = moonReflectionStrength;
-      reflectionColour = [195, 215, 245];
-    }
-  }
-
-  if (reflectionStrength <= 0.02) return;
-
-// If the light source is mostly behind storm clouds, do not draw a visible reflection.
-
-if (reflectionStrength <= 0.08 && stormSkyProgress > 0.35) return;
-
-  noStroke();
-
-  let waveMood = getWaveHeightEnergy();
-  let oceanHeight = max(audioSeaBottom - audioSeaTop, 1);
-  let shimmerCount = int(map(waveMood, 0.18, 1.15, 26, 72));
-  let reflectionWidth = map(waveMood, 0.18, 1.15, width * 0.10, width * 0.26);
-
-  for (let i = 0; i < shimmerCount; i++) {
-    let amt = i / max(shimmerCount - 1, 1);
-    let y = audioSeaTop + oceanHeight * map(amt, 0, 1, 0.03, 0.82);
-    let reflectionReveal = getBrushRevealAmount(map(y, audioSeaTop, audioSeaBottom, 0, 1));
-    if (reflectionReveal <= 0.01) continue;
-    let spread = reflectionWidth * (0.15 + amt * 1.15);
-    let x = reflectionX + sin(t * 2.2 + i * 0.75) * spread * 0.2 + random(-spread, spread);
-    let w = random(width * 0.018, width * 0.12) * (1 - amt * 0.45);
-    let h = random(2, 7);
-    let alphaValue = reflectionStrength * map(amt, 0, 1, 165, 32) * max(0.55, reflectionReveal);
-
-    fill(reflectionColour[0], reflectionColour[1], reflectionColour[2], alphaValue);
-    rect(x, y, w, h, h);
-  }
-}
 
 function refreshStormLayerGeometry() {
   for (let i = 0; i < stormWaveLayers.length; i++) {
@@ -1140,66 +1036,97 @@ function resizeAudioMechanic() {
   targetLayerRevealProgress = micStarted ? 1 : 0;
 }
 function drawLighthouseShoreBreak() {
-  // The time mechanic places the lighthouse/shore on the right side.
-  // Rather than cutting the waves off, this creates a natural wave-break foam where water meets the shore.
+  // The time mechanic places the lighthouse and rocky land on the right side.
+  // This creates a diagonal shore-break instead of a vertical foam wall.
   if (stormOpacity <= 0.01) return;
 
   let oceanHeight = max(audioSeaBottom - audioSeaTop, 1);
-  let shoreX = width * 0.86;
-  let shoreTop = audioSeaTop + oceanHeight * 0.18;
+  let shoreStartX = width * 0.81;
+  let shoreEndX = width * 0.96;
+  let shoreTop = audioSeaTop + oceanHeight * 0.2;
   let shoreBottom = audioSeaBottom + height * 0.04;
   let waveEnergy = getWaveHeightEnergy();
-  let foamStrength = map(waveEnergy + voicePulse * 0.25 + waveformHeight * 0.25, 0.055, 0.58, 0.35, 1.25);
+  let foamStrength = constrain(map(waveEnergy + voicePulse * 0.25 + waveformHeight * 0.25, 0.055, 0.58, 0.35, 1.25), 0.25, 1.35);
 
   push();
   noStroke();
 
-  // Soft dark edge makes the shore feel like an object cutting into the water without a hard mask.
-  for (let i = 0; i < 8; i++) {
-    let amt = i / 7;
-    let x = lerp(shoreX, width, amt);
-    fill(oceanPalette.deep[0] * 0.65, oceanPalette.deep[1] * 0.72, oceanPalette.deep[2] * 0.82, 34 * stormOpacity * (1 - amt));
+  // Soft shaded water beside the rocky land, suggesting the shore blocks the wave flow.
+  for (let i = 0; i < 9; i++) {
+    let amt = i / 8;
+    let x = lerp(shoreStartX, width, amt);
+    let alphaValue = 28 * stormOpacity * pow(1 - amt, 1.35);
+    fill(oceanPalette.deep[0] * 0.62, oceanPalette.deep[1] * 0.7, oceanPalette.deep[2] * 0.82, alphaValue);
     rect(x, shoreTop, width - x, shoreBottom - shoreTop);
   }
 
-  // Broken horizontal foam strokes where waves hit the right-side shore.
-  let foamCount = int(map(foamStrength, 0.35, 1.25, 18, 62));
+  // Broken foam strokes follow a diagonal implied coastline from upper-left to lower-right.
+  let foamCount = int(map(foamStrength, 0.35, 1.25, 24, 78));
   for (let i = 0; i < foamCount; i++) {
-    let yRatio = random(0.2, 0.98);
-    let y = audioSeaTop + oceanHeight * yRatio + sin(t * 2.4 + i * 0.5) * height * 0.006;
-    let edgeNoise = noise(i * 0.2, t * 0.55);
-    let x = shoreX + map(edgeNoise, 0, 1, -width * 0.035, width * 0.08);
-    let w = random(width * 0.018, width * 0.11) * map(yRatio, 0, 1, 0.65, 1.25);
-    let h = random(2, 6);
-    let alphaValue = random(70, 175) * foamStrength * stormOpacity;
+    let yRatio = random(0.18, 0.98);
+    let y = audioSeaTop + oceanHeight * yRatio + sin(t * 2.1 + i * 0.45) * height * 0.005;
+
+    // Diagonal shore: farther down the water, the land edge sits slightly more to the right.
+    let diagonalEdge = lerp(shoreStartX, shoreEndX, yRatio);
+    let edgeNoise = noise(i * 0.18, yRatio * 3.5, t * 0.45);
+    let x = diagonalEdge + map(edgeNoise, 0, 1, -width * 0.045, width * 0.055);
+
+    let w = random(width * 0.015, width * 0.09) * map(yRatio, 0, 1, 0.7, 1.25);
+    let h = random(2, 5.5);
+    let alphaValue = random(75, 185) * foamStrength * stormOpacity;
 
     fill(oceanPalette.foam[0], oceanPalette.foam[1], oceanPalette.foam[2], alphaValue);
     ellipse(x, y, w, h);
   }
 
-  // A few small splashes climb upward near the lighthouse/shore edge during louder sound.
-  let splashCount = int(map(foamStrength, 0.35, 1.25, 3, 18));
-  for (let i = 0; i < splashCount; i++) {
-    let baseY = random(shoreTop + oceanHeight * 0.08, shoreBottom - oceanHeight * 0.08);
-    let splashX = shoreX + random(-width * 0.018, width * 0.035);
-    let splashLift = random(height * 0.01, height * 0.045) * foamStrength;
-    let splashW = random(3, 9);
-    let splashH = random(2, 6);
+  // Short curved foam lines show waves curling back after striking the rocks.
+  strokeWeight(1.2);
+  noFill();
+  let curlCount = int(map(foamStrength, 0.35, 1.25, 6, 18));
+  for (let i = 0; i < curlCount; i++) {
+    let yRatio = random(0.24, 0.92);
+    let baseY = audioSeaTop + oceanHeight * yRatio;
+    let edgeX = lerp(shoreStartX, shoreEndX, yRatio);
+    let curlW = random(width * 0.025, width * 0.08);
+    let curlH = random(height * 0.006, height * 0.018);
+    let alphaValue = random(55, 135) * foamStrength * stormOpacity;
 
-    fill(oceanPalette.foam[0], oceanPalette.foam[1], oceanPalette.foam[2], random(55, 130) * foamStrength * stormOpacity);
+    stroke(oceanPalette.foam[0], oceanPalette.foam[1], oceanPalette.foam[2], alphaValue);
+    beginShape();
+    vertex(edgeX - curlW, baseY + curlH * 0.2);
+    bezierVertex(edgeX - curlW * 0.45, baseY - curlH, edgeX + curlW * 0.1, baseY - curlH * 0.5, edgeX + curlW * 0.25, baseY + curlH * 0.2);
+    endShape();
+  }
+
+  noStroke();
+
+  // Small splashes climb upward near the implied rocky edge during louder sound.
+  let splashCount = int(map(foamStrength, 0.35, 1.25, 4, 22));
+  for (let i = 0; i < splashCount; i++) {
+    let yRatio = random(0.22, 0.88);
+    let baseY = audioSeaTop + oceanHeight * yRatio;
+    let edgeX = lerp(shoreStartX, shoreEndX, yRatio);
+    let splashX = edgeX + random(-width * 0.018, width * 0.03);
+    let splashLift = random(height * 0.008, height * 0.04) * foamStrength;
+    let splashW = random(3, 8);
+    let splashH = random(2, 5);
+
+    fill(oceanPalette.foam[0], oceanPalette.foam[1], oceanPalette.foam[2], random(55, 135) * foamStrength * stormOpacity);
     ellipse(splashX, baseY - splashLift, splashW, splashH);
   }
 
   // Subtle reflected turbulence beside the shore, aligned with left-to-right wave travel.
   strokeWeight(1);
-  for (let i = 0; i < 16; i++) {
-    let y = random(shoreTop, shoreBottom);
-    let x1 = shoreX - random(width * 0.02, width * 0.11);
-    let x2 = shoreX + random(width * 0.015, width * 0.08);
-    let alphaValue = random(28, 90) * foamStrength * stormOpacity;
+  for (let i = 0; i < 18; i++) {
+    let yRatio = random(0.2, 0.96);
+    let y = audioSeaTop + oceanHeight * yRatio;
+    let edgeX = lerp(shoreStartX, shoreEndX, yRatio);
+    let x1 = edgeX - random(width * 0.025, width * 0.12);
+    let x2 = edgeX + random(width * 0.01, width * 0.055);
+    let alphaValue = random(25, 85) * foamStrength * stormOpacity;
 
     stroke(oceanPalette.highlight[0], oceanPalette.highlight[1], oceanPalette.highlight[2], alphaValue);
-    line(x1, y, x2, y + sin(t * 2 + i) * height * 0.004);
+    line(x1, y, x2, y + sin(t * 2 + i) * height * 0.0035);
   }
 
   pop();
