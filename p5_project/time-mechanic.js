@@ -885,8 +885,8 @@ class TimeMechanic {
     ctx.fill();
     ctx.restore();
 
-    const seaSpotX = constrain(endX, width * 0.08, lanternX - width * 0.14);
-    const seaSpotY = constrain(endY, sceneState.horizonY + height * 0.04, height * 0.82);
+    const seaSpotX = endX;
+    const seaSpotY = endY;
     this.drawLighthouseSeaSpot(seaSpotX, seaSpotY, beamThickness, nightVisibility, facingViewer);
   }
 
@@ -894,8 +894,8 @@ class TimeMechanic {
     // Soft elliptical light on the sea where the lighthouse beam lands.
     // It is brighter than the beam itself, like a concentrated reflection on the water surface.
     const ctx = drawingContext;
-    const spotWidth = beamThickness * (2.7 + facingViewer * 1.35);
-    const spotHeight = beamThickness * (0.42 + facingViewer * 0.18);
+    const spotWidth = beamThickness * (1.55 + facingViewer * 0.65);
+    const spotHeight = beamThickness * (0.58 + facingViewer * 0.18);
     const spotAlpha = nightVisibility * (0.34 + facingViewer * 0.34);
 
     ctx.save();
