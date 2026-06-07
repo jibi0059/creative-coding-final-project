@@ -61,14 +61,14 @@ connects to our vision of "unfreezing" Monet's painting—instead of watching ti
 
 ---
 
-## AI Acknowledgement
-
-**Jiale Bi (User Input):** I used Claude (AI) to help plan the 
-overall structure of my mechanic and to review my code for errors. 
-All of the code was written and implemented by me.
-
 ## Part 3: Putting It Together👍
 
 All four mechanics share a single canvas representing Monet's seascape, layered from background to foreground: the Time-based sky and lighthouse at the back, the Perlin-driven sea and clouds in the middle, the Audio-driven waves and fog modulating motion throughout, and the User Input ripples on top. The mechanics actively influence one another—audio intensity amplifies Perlin wave motion; user ripples temporarily disturb the Perlin water surface; the time cycle colours every layer, from sky to sea to lighthouse glow. Conceptually, the project is held together by one idea: **Monet's painting is no longer frozen — it lives, breathes, and responds to you.**
 
 ---
+
+## AI Acknowledgement
+
+**Jiale Bi (User Input):** I used Claude (AI) to help plan the 
+overall structure of my mechanic and to review my code for errors. 
+All of the code was written and implemented by me.
