@@ -126,7 +126,7 @@ function drawInputMechanic() {
 
   } else if (inputFollowMode) {
     // Moving the full canvas width advances the cycle by the sensitivity fraction
-    const sensitivity = 0.5;
+    const sensitivity = 0.6;
     const delta = (mouseX - inputPrevMouseX) / width * sensitivity;
     inputProgress = ((inputProgress + delta) % 1 + 1) % 1;
     inputPrevMouseX = mouseX;
@@ -136,30 +136,30 @@ function drawInputMechanic() {
     let hovered = false;
 
     // Draw a faint highlight over whichever interactive element the mouse is near
+    push();
+    noStroke();
     if (boatVisible &&
         mouseX > boatState.x - boatW * 0.5 &&
         mouseX < boatState.x + boatW * 0.5 &&
         mouseY > boatState.y - boatH * 2.25 &&
         mouseY < boatState.y + boatH * 0.7) {
       hovered = true;
-      noStroke();
       fill(255, 255, 255, 14);
       rect(boatState.x - boatW * 0.5, boatState.y - boatH * 2.25, boatW, boatH * 2.95, 4);
     }
 
     if (sun.visibility > 0.1 && dist(mouseX, mouseY, sun.x, sun.y) < sun.radius * 1.5) {
       hovered = true;
-      noStroke();
       fill(255, 255, 200, 20);
       circle(sun.x, sun.y, sun.radius * 3);
     }
 
     if (moon.visibility > 0.1 && dist(mouseX, mouseY, moon.x, moon.y) < moon.radius * 1.5) {
       hovered = true;
-      noStroke();
       fill(200, 220, 255, 20);
       circle(moon.x, moon.y, moon.radius * 3);
     }
+    pop();
 
     cursor(hovered ? HAND : ARROW);
   }
@@ -216,12 +216,12 @@ function keyPressed() {
     // Recreate the time mechanic, then re-apply the patch to the new instance
     if (typeof setupTimeMechanic === 'function') {
       setupTimeMechanic();
-      if (typeof timeMechanic !== 'undefined') timeMechanic._inputPatched = false;
       patchTimeMechanic();
     }
   }
 }
 
 function resizeInputMechanic() {
-  // No cached graphics to rebuild; all sizes are read from width/height each frame
+  // Reset the previous mouse position so the next delta is zero, not a stale difference
+  inputPrevMouseX = mouseX;
 }
