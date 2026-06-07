@@ -1,10 +1,27 @@
 // AUDIO MECHANIC — sound-reactive storm ocean
 // Creative director: Larry Hao - audio mechanic
-// This file controls the microphone interaction with following effects: storm ocean, rain, thunder, 
-// lightning reflection, painterly water texture, and shore foam near the lighthouse.
-// The main idea is: when the mic is turned on, the calm sea transforms into a storm sea.
-// Voice volume changes the wave height, surface movement, foam, and storm intensity.
-// Developed with iterative support with ChatGPT; final behaviour was tested and adjusted manually.
+//
+// Purpose of this file:
+// This file is responsible for the microphone-based interaction in the group artwork.
+// When the user clicks START MIC, the calm ocean changes into a storm ocean.
+// The user's voice volume controls the wave height, surface movement, foam amount, rain intensity,
+// thunder probability, lightning reflection, and the overall storm atmosphere.
+//
+// What this mechanic brings to the artwork:
+// It adds an emotional/environmental response to the painting. Instead of being a fixed scene,
+// the ocean becomes expressive: quiet sound keeps it calmer, while louder voice or clapping makes
+// the sea feel more active and storm-like.
+//
+// Main p5.js techniques used:
+// - p5.AudioIn() and mic.getLevel() read live microphone volume.
+// - map(), constrain(), lerp(), pow(), sin(), and noise() convert sound into smooth animation values.
+// - beginShape(), vertex(), ellipse(), rect(), line(), and bezierVertex() draw waves, rain, foam, clouds, and lightning.
+// - random() creates natural variation in clouds, foam, rain, and painterly marks.
+// - p5 noise and Worley noise are mixed together to create a less digital, more painterly water texture.
+//
+// AI acknowledgement:
+// Developed with iterative support from ChatGPT for code structure, p5.js logic, and refinement ideas.
+// Final design decisions, testing, tuning, and integration were reviewed and adjusted manually.
 
 let micButton;
 let t = 0;
@@ -48,6 +65,10 @@ let oceanPalette = {
   foam: [235, 232, 210]
 };
 
+// Sets up the audio mechanic.
+// p5.AudioIn() creates a microphone input object.
+// createButton() creates the START MIC / MIC OFF button used to activate the browser's audio permission.
+// createStormOceanSystem() builds the wave, brush, cloud, rain, foam, and thunder objects before animation starts.
 function setupAudioMechanic() {
   mic = new p5.AudioIn();
 
@@ -58,6 +79,11 @@ function setupAudioMechanic() {
   createStormOceanSystem();
 }
 
+// Main draw function for the audio mechanic.
+// This is called every frame from sketch.js.
+// It updates the ocean bounds, reads microphone input, updates transitions, adjusts colour by time of day,
+// then draws the storm sky and storm ocean.
+// The variable t works as a simple animation timer used by sin(), noise(), and movement offsets.
 function drawAudioMechanic() {
   updateAudioOceanBounds();
   updateSoundLevel();
@@ -75,6 +101,10 @@ function drawAudioMechanic() {
   t += 0.01;
 }
 
+// Finds where the audio ocean should begin and end.
+// If the time mechanic has a shared horizonY value, this file uses it so all mechanics agree on the sea level.
+// Otherwise, it falls back to height * 0.5, meaning the ocean begins halfway down the canvas.
+// This keeps the wave system responsive to different browser sizes.
 function updateAudioOceanBounds() {
   // Match the time mechanic horizon when it exists, otherwise use the shared group horizon.
   let horizon = height * 0.5;
@@ -87,6 +117,10 @@ function updateAudioOceanBounds() {
   audioSeaBottom = height;
 }
 
+// Updates the ocean colour palette according to the time mechanic.
+// dayAmount, nightAmount, and twilightAmount are used to make the storm ocean brighter in daytime
+// and darker at night, so the audio mechanic visually belongs to the same world as the sky.
+// constrain() keeps RGB values within safe colour ranges from 0 to 255.
 function updateOceanPaletteFromTime() {
   // Keep our ocean visually connected to the time mechanic instead of using one fixed blue palette.
   let dayAmount = 0.5;
@@ -129,10 +163,19 @@ function updateOceanPaletteFromTime() {
   ];
 }
 
+// Converts a depth ratio into an actual y-position in the ocean.
+// depthRatio = 0 means near the horizon/top of the ocean.
+// depthRatio = 1 means near the bottom of the canvas.
+// lerp() is used so wave layers and brush marks scale proportionally with the window height.
 function audioOceanY(depthRatio) {
   return lerp(audioSeaTop - height * 0.025, audioSeaBottom + height * 0.025, depthRatio);
 }
 
+// Handles the START MIC / MIC OFF button.
+// userStartAudio() and getAudioContext().resume() are needed because browsers require a user gesture
+// before microphone/audio input can start.
+// When the mic turns on, the storm ocean, sky, and layer reveal targets move toward 1.
+// When the mic turns off, those targets move back toward 0 so the storm fades away smoothly.
 function toggleMic() {
   if (!micStarted) {
     userStartAudio();
@@ -167,10 +210,28 @@ function toggleMic() {
   }
 }
 
-// Reads microphone input and converts it into three types of sound response:
-// 1. currentIntensity — slower overall storm strength
-// 2. voicePulse — fast small peaks, similar to a recording app waveform
-// 3. waveformHeight — fast vertical wave height response based on voice volume
+// Reads microphone input and converts it into three sound-control values.
+//
+// rawMicLevel:
+// The direct microphone volume from mic.getLevel(). This is usually a very small number.
+//
+// currentIntensity:
+// A smoother, slower value for the overall storm strength. It prevents the whole ocean from shaking too aggressively.
+//
+// voicePulse:
+// A quick response to small voice peaks, similar to the moving waveform in a recording app.
+// It is used to create small fast ripples, extra foam, and more active surface marks.
+//
+// waveformHeight:
+// A fast vertical response that makes the main wave height rise and fall with voice volume.
+// This makes the ocean feel more directly connected to speech or clapping.
+//
+// p5.js techniques used here:
+// mic.getLevel() reads the microphone volume.
+// max() removes background noise using a noise floor.
+// pow() boosts small microphone values so they are visually useful.
+// lerp() creates attack/release smoothing, so the wave rises quickly but falls back naturally.
+// map() converts audio ranges into animation ranges.
 function updateSoundLevel() {
   rawMicLevel = 0;
 
@@ -224,8 +285,11 @@ function updateSoundLevel() {
   currentIntensity = lerp(currentIntensity, targetIntensity, intensityRate);
 }
 
-// Converts the microphone response into wave height energy.
-// The maximum height is capped so the ocean stays controlled, but the height still rises/falls quickly with voice volume.
+// Converts microphone response into a single wave-height value.
+// slowBody gives the ocean a stable base movement.
+// fastHeight makes the height respond quickly like a recording waveform.
+// The final value is mapped from 0.055 to 0.58, which keeps the maximum wave height controlled.
+// pow() makes the response curve feel more sensitive at lower sound levels.
 function getWaveHeightEnergy() {
   // Recording-app style vertical response: height follows voice peaks clearly.
   // It rises and falls quickly, while keeping the same maximum cap.
@@ -237,14 +301,20 @@ function getWaveHeightEnergy() {
 }
 
 
+// Smoothstep creates a soft transition between 0 and 1.
+// It is used for layer reveal timing, so wave layers fade in gradually instead of popping on suddenly.
+// This function is not built into p5.js, so it is defined manually here.
 function smoothstep(edge0, edge1, x) {
   let amt = constrain((x - edge0) / (edge1 - edge0), 0, 1);
   return amt * amt * (3 - 2 * amt);
 }
 
 // Worley noise helpers for painterly water texture.
-// Worley noise creates broken cell-like variation, which helps the ocean look less digitally smooth.
-// It is mixed with p5 noise so the final texture still feels organic and painted.
+// Worley noise creates cell-like/broken surface variation, which helps the ocean avoid looking too smooth or computer-generated.
+// hash2D() creates repeatable pseudo-random feature points for each cell.
+// worleyNoise() checks nearby cells and finds the closest feature point, producing a cellular texture.
+// waterCellTexture() mixes this with p5 noise() so the result feels more like painted water than a pure mathematical pattern.
+// This technique goes beyond the basic p5.js tutorial examples, so it is commented here to explain how it works.
 function hash2D(ix, iy) {
   // Small deterministic hash for Worley feature points.
   let n = sin(ix * 127.1 + iy * 311.7) * 43758.5453123;
@@ -281,8 +351,10 @@ function waterCellTexture(x, y, strength) {
   return map(mixed, 0, 1, -strength, strength);
 }
 
-// Controls how fast the ocean moves horizontally.
-// The waves always travel left to right so the water direction feels consistent with the shore interaction.
+// Controls horizontal wave speed.
+// The ocean should always travel left to right because the lighthouse/shore is on the right side.
+// This makes the later shore foam feel physically logical: waves move toward land, then break into foam.
+// Voice input slightly increases speed, but height is the main sound response so the ocean does not become chaotic.
 function getWaveSpeedEnergy() {
   // Keep the audio ocean flowing close to the calm Perlin ocean speed.
   // Sound changes the wave height more than the horizontal travel speed.
@@ -297,8 +369,11 @@ function getWaveSpeedEnergy() {
   }
 }
 
-// Handles the mic on/off transition.
-// The ocean and storm sky fade in when the mic starts, then fade out when the mic stops.
+// Handles mic on/off transition values.
+// stormOpacity controls the visibility of the storm ocean.
+// layerRevealProgress controls the layer-by-layer wave reveal.
+// stormSkyProgress controls the clouds, rain, and thunder visibility.
+// lerp() is used so the transition feels animated and cinematic rather than instant.
 function updateOceanTransition() {
   // Smooth fade transition instead of left/right sweep.
   // Mic on: storm layer fades in as a calm sea, then reacts to sound.
@@ -316,13 +391,17 @@ function updateOceanTransition() {
   }
 }
 
+// Returns the current storm visibility.
+// This can be used by other mechanics if they need to know whether the audio storm is active.
 function getStormPresence() {
   return stormOpacity;
 }
 
-// Creates the layer-by-layer reveal effect.
-// Mic on: deeper/bottom wave layers appear first.
-// Mic off: top/surface layers disappear first.
+// Controls how visible each wave layer is during the mic transition.
+// Each wave layer has an index, and this function turns that index into a reveal amount from 0 to 1.
+// Mic on: bottom/deeper layers appear first, then surface layers.
+// Mic off: surface layers disappear first, then deeper layers.
+// smoothstep() makes each layer fade smoothly instead of switching on/off.
 function getLayerRevealAmount(index) {
   let layerCount = max(stormWaveLayers.length - 1, 1);
   let depth = index / layerCount;
@@ -340,6 +419,9 @@ function getLayerRevealAmount(index) {
   return constrain(reveal, 0, 1);
 }
 
+// Similar to getLayerRevealAmount(), but for small brush marks instead of large wave layers.
+// yRatio controls whether a mark is near the top/surface of the ocean or deeper down.
+// This keeps the painterly texture reveal consistent with the layered wave reveal.
 function getBrushRevealAmount(yRatio) {
   // Same logic as the wave layers, but based on brush depth.
   let order = micStarted ? 1 - yRatio : yRatio;
@@ -347,6 +429,8 @@ function getBrushRevealAmount(yRatio) {
   return constrain(smoothstep(order * revealWindow, order * revealWindow + revealWindow, layerRevealProgress), 0, 1);
 }
 
+// Optional debug display for testing microphone levels.
+// audioDebugVisible is false for the final presentation so the text does not distract from the artwork.
 function drawMicDebug() {
   noStroke();
   fill(255, 180);
@@ -363,9 +447,12 @@ function drawMicDebug() {
 }
 
 
-// Builds all reusable visual elements for the audio mechanic:
-// wave layers, moving brush marks, foam marks, storm clouds, rain, and thunder objects.
-// These are generated once, then animated every frame.
+// Builds the reusable data objects for the storm ocean.
+// stormWaveLayers store the large layered wave shapes.
+// stormBrushes store the small painterly marks that move across the wave surface.
+// foamBrushes store reusable foam marks.
+// stormClouds, rainDrops, and thunderBolts are reset here so resizing or restarting the system stays clean.
+// random() gives each object slightly different size, speed, colour type, and movement, creating natural variation.
 function createStormOceanSystem() {
   stormBrushes = [];
   stormWaveLayers = [];
@@ -434,8 +521,10 @@ function createStormOceanSystem() {
 }
 
 // Creates the storm sky system.
-// Clouds are given fixed puff shapes so they drift smoothly instead of randomly shaking every frame.
-// Rain starts from the cloud area and falls at a slight angle.
+// Each cloud is made from several ellipse puffs.
+// The puff sizes and offsets are generated once and stored in c.puffs, so the clouds do not flicker or shake every frame.
+// Rain drops are also created here with position, length, speed, drift, and alpha values.
+// This makes the sky feel like a heavy storm layer that enters with the microphone.
 function createAudioStormSkySystem() {
   stormClouds = [];
   rainDrops = [];
@@ -480,8 +569,10 @@ function createAudioStormSkySystem() {
   }
 }
 
-// Draws the sky part of the audio mechanic: dark storm shade, clouds, thunder, and rain.
-// This is drawn before the ocean so the storm sits behind the waves.
+// Draws the complete storm sky.
+// It uses drawingContext.globalAlpha so the entire sky system can fade in and out together.
+// The order matters: shade first, then clouds, then thunder, then rain.
+// It is drawn before the ocean so the storm atmosphere sits behind the water.
 function drawAudioStormSky() {
   if (stormSkyProgress <= 0.01 && !micStarted && !stormLeaving) return;
 
@@ -498,6 +589,9 @@ function drawAudioStormSky() {
   pop();
 }
 
+// Draws a dark gradient-like shade over the top part of the sky.
+// This makes the clouds feel heavier and helps the storm visually separate from the calm daytime sky.
+// Multiple transparent rect() bands are used instead of one hard rectangle to create a softer fade.
 function drawStormSkyShade() {
   noStroke();
 
@@ -511,6 +605,10 @@ function drawStormSkyShade() {
   }
 }
 
+// Draws the storm cloud field.
+// Clouds slide in from the left when the mic turns on, and leave to the right when the mic turns off.
+// Each cloud is made of multiple ellipse() puffs with very small sin() movement, creating slow natural drifting.
+// The alpha changes with wave energy, so stronger sound makes the storm feel denser.
 function drawStormCloudField() {
   noStroke();
 
@@ -545,8 +643,10 @@ function drawStormCloudField() {
   }
 }
 
-// Randomly creates lightning when the mic is active.
-// Louder voice/waveform energy increases the chance of thunder, but it stays occasional so it feels dramatic.
+// Randomly creates a lightning bolt when the mic is active.
+// voicePulse and waveformHeight increase the chance of lightning, connecting thunder to sound intensity.
+// random() is used for bolt start position and jagged segment points.
+// The thunder is intentionally occasional so it feels like a dramatic event, not constant flashing.
 function maybeSpawnThunder() {
   if (!micStarted) return;
 
@@ -581,8 +681,10 @@ function maybeSpawnThunder() {
 }
 
 
-// Draws a soft cloud glow around lightning.
-// This avoids a hard rectangular flash and makes the light feel like it is diffusing through clouds.
+// Draws the soft glow around a lightning bolt.
+// Instead of using a rectangle flash, this draws layered ellipse() shapes around the bolt position.
+// This creates a softer cloud-light effect and avoids visible hard edges.
+// The glow fades using the bolt's life value.
 function drawSoftThunderGlow(b) {
   noStroke();
 
@@ -607,8 +709,10 @@ function drawSoftThunderGlow(b) {
   ellipse(glowX, glowY, b.glowSize * 0.7, b.glowSize * 0.32);
 }
 
-// Draws broken lightning reflections on the ocean surface.
-// The reflection is fragmented into short horizontal marks because moving water breaks reflected light.
+// Draws the lightning reflection on the ocean surface.
+// Real water does not reflect lightning as one perfect line, so this uses many short ellipse() marks.
+// The marks spread wider as they move down the ocean, and their alpha fades with the thunder life value.
+// noise() and sin() make the reflection shimmer with the moving water.
 function drawThunderWaterReflection(b) {
   if (stormOpacity <= 0.01) return;
 
@@ -646,6 +750,9 @@ function drawThunderWaterReflection(b) {
   }
 }
 
+// Updates and draws all active thunder bolts.
+// Each bolt is drawn as a jagged beginShape()/vertex() line, with a thicker low-alpha blue glow behind it.
+// The life value decreases each frame, so the lightning and its reflection fade quickly.
 function updateAndDrawThunderBolts() {
   maybeSpawnThunder();
 
@@ -682,7 +789,9 @@ function updateAndDrawThunderBolts() {
 }
 
 // Draws rain from the cloud area down toward the ocean.
-// The rain is almost vertical with a slight 10-degree slant for a natural storm feeling.
+// Each rain drop is a line() with a slight 10-degree slant using tan(radians(10)).
+// Rain speed and opacity are connected to wave energy and voicePulse, so stronger audio creates heavier rain.
+// When a drop reaches the bottom, it respawns back inside the cloud area rather than from the top of the screen.
 function drawAudioRain() {
   if (stormSkyProgress <= 0.01) return;
 
@@ -719,7 +828,10 @@ function drawAudioRain() {
 
 
 // Draws the complete storm ocean layer.
-// This includes the ocean base, painterly brush texture, wave shapes, shore break foam, and surface foam.
+// drawingContext.globalAlpha applies the mic on/off opacity to the whole ocean layer.
+// drawingContext.clip() prevents accidental drawing outside the canvas area.
+// The drawing order is: ocean atmosphere, painterly brush field, large wave layers, lighthouse shore break, then foam.
+// This order keeps the water base behind the wave forms and places foam/details on top.
 function drawStormOceanLayer() {
   if (stormOpacity <= 0.01 && !micStarted && !stormLeaving) return;
 
@@ -748,8 +860,10 @@ function drawStormOceanLayer() {
   pop();
 }
 
-// Draws the full water surface when the mic is active.
-// This covers the calm Perlin ocean and replaces it with a darker sound-reactive storm ocean.
+// Draws the storm ocean base.
+// First, horizontal rect() bands create a full dark water surface that covers the calm Perlin ocean when the mic is on.
+// Then many ellipse() dabs create a Monet-like painterly texture so this ocean still matches the artwork style.
+// noise(), random(), and Worley-based waterCellTexture() create subtle colour variation across the surface.
 function drawAudioOceanAtmosphere() {
   // When the mic is active, this becomes the full ocean surface rather than a transparent overlay.
   noStroke();
@@ -802,7 +916,9 @@ function drawAudioOceanAtmosphere() {
 }
 
 
-// Keeps wave positions responsive to window size and the shared horizon from the time mechanic.
+// Refreshes responsive wave geometry.
+// Wave positions and amplitudes are recalculated from width, height, and audioSeaTop.
+// This means the ocean still fits correctly if the browser window is resized.
 function refreshStormLayerGeometry() {
   for (let i = 0; i < stormWaveLayers.length; i++) {
     let layer = stormWaveLayers[i];
@@ -817,8 +933,10 @@ function refreshStormLayerGeometry() {
   }
 }
 
-// Updates one wave layer's movement.
-// The flow offset always increases, creating one-way left-to-right wave travel.
+// Updates the horizontal movement of one wave layer.
+// layer.flowOffset increases every frame, and getStormWaveY() uses x - travelOffset.
+// This makes the wave crests travel left to right.
+// Large offset values are wrapped back down to avoid long-running precision issues.
 function updateSingleStormWaveMotion(layer, index) {
   // One-way motion only. Everything uses positive left-to-right travel.
   let flowSpeed = layer.speed * getWaveSpeedEnergy();
@@ -850,8 +968,10 @@ function updateSingleStormWaveMotion(layer, index) {
 //   rect(max(0, earliestTail), height * 0.34, min(width, furthestFront) - max(0, earliestTail), height * 0.66);
 // }
 
-// Draws many small painterly marks attached to the wave body.
-// These marks help the audio ocean match the calm Perlin ocean's painted texture.
+// Draws small painterly marks attached to the wave bodies.
+// Each mark follows a wave layer using getStormWaveY(), so the texture moves with the water instead of floating randomly.
+// ellipse() is used instead of hard rectangles to match the soft Perlin ocean style.
+// Sound input affects vertical movement, brightness, and texture density.
 function drawStormBrushFieldFromLayers() {
   rectMode(CENTER);
   noStroke();
@@ -918,8 +1038,10 @@ function drawStormBrushFieldFromLayers() {
   rectMode(CORNER);
 }
 
-// Draws one large wave layer.
-// Each layer has its own height, colour, speed, and reveal timing, creating depth in the ocean.
+// Draws one large wave layer using beginShape() and vertex().
+// The top edge of the shape follows getStormWaveY(), while the bottom closes below the screen.
+// Each layer has different colour, amplitude, speed, wavelength, and reveal timing, creating depth.
+// The wave colour also receives subtle Worley texture variation so the body is not too flat.
 function drawSingleStormWave(layer, index) {
   let leftEdge = layer.tail;
   let rightEdge = layer.front;
@@ -972,7 +1094,9 @@ function drawSingleStormWave(layer, index) {
 }
 
 // Adds small texture marks on top of each wave layer.
-// Voice input increases the number of marks so the surface feels more active when sound is louder.
+// These marks are drawn near the wave surface using ellipse().
+// voicePulse and waveformHeight increase markCount, so louder sound creates more surface activity.
+// noise() and waterCellTexture() vary the colour so the marks feel painterly rather than mechanical.
 function drawPainterlyWaveTexture(layer, index, amp, wavelength, speed, leftEdge, rightEdge, localOffset, layerReveal) {
   let depth = index / max(stormWaveLayers.length - 1, 1);
   let markCount = int(map(depth, 0, 1, 8, 18) + voicePulse * 18 + waveformHeight * 24);
@@ -1002,7 +1126,10 @@ function drawPainterlyWaveTexture(layer, index, amp, wavelength, speed, leftEdge
 }
 
 // Calculates the y-position of a wave at a given x-position.
-// It combines sine waves, p5 noise, Worley texture influence, and voice response to create an organic storm surface.
+// This is the main wave formula.
+// It combines several sine waves for layered water motion, p5 noise() for organic irregularity,
+// voicePulse for quick audio ripples, and waveformHeight for recording-app-like vertical height changes.
+// travelOffset makes the whole wave pattern move left to right.
 function getStormWaveY(layer, x, amp, wavelength, speed, travelOffset) {
   // One-direction wave travel: subtracting positive travel from x makes crests move left-to-right.
   let travellingX = x - travelOffset;
@@ -1026,6 +1153,8 @@ function getStormWaveY(layer, x, amp, wavelength, speed, travelOffset) {
 }
 
 // Draws small foam marks on wave crests when the waves are strong enough.
+// getStormWaveY() finds the crest position, then ellipse() draws small pale foam highlights.
+// Foam only appears above a wave-energy threshold so calm water does not look over-foamed.
 function drawStormCrestFoam(layer, amp, wavelength, speed, leftEdge, rightEdge, localOffset) {
   if (getWaveHeightEnergy() < 0.13) return;
 
@@ -1048,7 +1177,9 @@ function drawStormCrestFoam(layer, amp, wavelength, speed, leftEdge, rightEdge, 
 }
 
 // Draws additional moving foam marks across the water surface.
-// Foam amount increases with voice volume and waveform height.
+// These are reusable foamBrush objects that move with each wave layer.
+// rect() is used here to create short streak-like highlights.
+// Foam count increases with wave height, voicePulse, and waveformHeight, making louder sound visually rougher.
 function drawFoamBrushes() {
   if (getWaveHeightEnergy() < 0.14) return;
 
@@ -1084,8 +1215,9 @@ function drawFoamBrushes() {
 }
 
 
-// Rebuilds the audio mechanic when the browser size changes.
-// This keeps the storm ocean responsive to different screen sizes.
+// Rebuilds the audio mechanic when the browser window changes size.
+// The canvas is responsive, so all wave, cloud, rain, and foam objects must be recalculated for the new width/height.
+// The transition values are preserved depending on whether the mic is currently active.
 function resizeAudioMechanic() {
   updateAudioOceanBounds();
   createStormOceanSystem();
@@ -1094,8 +1226,12 @@ function resizeAudioMechanic() {
   layerRevealProgress = micStarted ? 1 : 0;
   targetLayerRevealProgress = micStarted ? 1 : 0;
 }
+
 // Adds wave interaction near the lighthouse/rocky shore from the time mechanic.
-// Waves do not stop suddenly; instead, they create diagonal shore foam, curled foam, splashes, and turbulence.
+// Instead of cutting the waves off with a hard edge, the water creates foam where it meets the implied shoreline.
+// A diagonal shore line is used because the lighthouse land mass extends from the right side into the ocean.
+// ellipse(), line(), and bezierVertex() are used for foam strokes, splashes, curled foam, and reflected turbulence.
+// This helps integrate the audio ocean with the time mechanic's lighthouse scene.
 function drawLighthouseShoreBreak() {
   // The time mechanic places the lighthouse and rocky land on the right side.
   // This creates a diagonal shore-break instead of a vertical foam wall.
