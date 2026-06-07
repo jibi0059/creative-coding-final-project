@@ -1,63 +1,60 @@
-let inputFollowMode  = false;
-let inputTargetBody  = null;   // 'sun' or 'moon'
-let inputProgress    = 0;      // fake cycleProgress driven by mouse delta
-let inputPrevMouseX  = 0;
-let inputRealState   = null;   // always holds the real (millis-based) scene state
+let inputFollowMode = false;
+let inputTargetBody = null; // 'sun' or 'moon'
+let inputProgress = 0; // fake cycleProgress controlled by mouse
+let inputPrevMouseX = 0;
+let inputRealState = null; // real millis-based state, kept so the boat is unaffected
 
 let inputBoatFollowMode = false;
 let inputBoatPos;
 
 let inputWasPressed = false;
-let inputPaused     = false;
+let inputPaused = false;
 
 function setupInputMechanic() {
   inputBoatPos = createVector(0, 0);
   patchTimeMechanic();
 }
 
-// Intercept timeMechanic so the sky uses inputProgress while in follow mode,
-// but the boat always keeps the real automatic time.
+// Overrides timeMechanic methods so mouse input can control sky and boat separately
 function patchTimeMechanic() {
   if (typeof timeMechanic === 'undefined' || timeMechanic._inputPatched) return;
 
-  // ── Sky / celestial override ─────────────────────────────────────────────
+  // Replace update() so the sky rebuilds from inputProgress while the boat uses real time
   const _nativeUpdate = timeMechanic.update.bind(timeMechanic);
   timeMechanic.update = function () {
     const real = _nativeUpdate();
-    inputRealState = real;            // always keep the real state for the boat
+    inputRealState = real;
 
     if (inputFollowMode) {
-      const p            = inputProgress;
-      const dayAmount    = this.getDayAmount(p);
-      const nightAmount  = 1 - dayAmount;
-      const dawnAmount   = this.getTransitionAmount(p, 0.12, 0.32);
-      const duskAmount   = this.getTransitionAmount(p, 0.56, 0.76);
+      const p = inputProgress;
+      const dayAmount = this.getDayAmount(p);
+      const nightAmount = 1 - dayAmount;
+      const dawnAmount = this.getTransitionAmount(p, 0.12, 0.32);
+      const duskAmount = this.getTransitionAmount(p, 0.56, 0.76);
       const twilightAmount = max(dawnAmount, duskAmount);
       return {
-        cycleProgress  : p,
+        cycleProgress: p,
         dayAmount,
         nightAmount,
         dawnAmount,
         duskAmount,
         twilightAmount,
-        sun      : this.getSunState(p, dayAmount, twilightAmount),
-        moon     : this.getMoonState(p, nightAmount),
-        horizonY : height * 0.5
+        sun: this.getSunState(p, dayAmount, twilightAmount),
+        moon: this.getMoonState(p, nightAmount),
+        horizonY: height * 0.5
       };
     }
     return real;
   };
 
-  // ── Boat keeps the real automatic time ──────────────────────────────────
+  // Replace getBoatState() so the boat always follows real time, not the mouse-driven sky
   const _nativeGetBoatState = timeMechanic.getBoatState.bind(timeMechanic);
   timeMechanic.getBoatState = function (sceneState) {
-    // When dragging a celestial body, feed the boat the real scene state
-    // so it continues its natural voyage unaffected by the sky scrub.
     const boatScene = (inputFollowMode && inputRealState) ? inputRealState : sceneState;
     const state = _nativeGetBoatState(boatScene);
     if (inputBoatFollowMode) {
-      state.x     = inputBoatPos.x;
-      state.y     = inputBoatPos.y;
+      state.x = inputBoatPos.x;
+      state.y = inputBoatPos.y;
       state.alpha = 255;
     }
     return state;
@@ -70,16 +67,17 @@ function drawInputMechanic() {
   if (!latestTimeSceneState) return;
   patchTimeMechanic();
 
-  const sceneState  = latestTimeSceneState;
-  const sun         = sceneState.sun;
-  const moon        = sceneState.moon;
+  const sceneState = latestTimeSceneState;
+  const sun = sceneState.sun;
+  const moon = sceneState.moon;
 
-  const boatState  = timeMechanic.getBoatState(sceneState);
-  const boatW      = width  * 0.18;
-  const boatH      = height * 0.06;
+  // Boat hit area matches the hull and mast bounds from time-mechanic's drawBoat
+  const boatState = timeMechanic.getBoatState(sceneState);
+  const boatW = width * 0.18;
+  const boatH = height * 0.06;
   const boatVisible = boatState.alpha > 10;
 
-  // ── single-press detection ───────────────────────────────────────────────
+  // Detect a fresh click without firing every frame the button is held
   const justClicked = mouseIsPressed && !inputWasPressed;
 
   if (justClicked) {
@@ -91,7 +89,7 @@ function drawInputMechanic() {
       inputTargetBody = null;
 
     } else {
-      // Boat first (sits on top visually)
+      // Check boat first since it sits on top of the water layer
       if (boatVisible &&
           mouseX > boatState.x - boatW * 0.5 &&
           mouseX < boatState.x + boatW * 0.5 &&
@@ -104,41 +102,40 @@ function drawInputMechanic() {
                  dist(mouseX, mouseY, sun.x, sun.y) < sun.radius * 1.5) {
         inputFollowMode = true;
         inputTargetBody = 'sun';
-        // Seed from real cycle so there is no visible jump at click moment
-        inputProgress   = sceneState.cycleProgress;
+        // Start from the current real progress to avoid a jump in the sky
+        inputProgress = sceneState.cycleProgress;
         inputPrevMouseX = mouseX;
 
       } else if (moon.visibility > 0.1 &&
                  dist(mouseX, mouseY, moon.x, moon.y) < moon.radius * 1.5) {
         inputFollowMode = true;
         inputTargetBody = 'moon';
-        inputProgress   = sceneState.cycleProgress;
+        inputProgress = sceneState.cycleProgress;
         inputPrevMouseX = mouseX;
       }
     }
   }
   inputWasPressed = mouseIsPressed;
 
-  // ── position / progress updates + cursor ────────────────────────────────
   if (inputBoatFollowMode) {
     inputBoatPos.x = lerp(inputBoatPos.x, mouseX, 0.05);
+    // Constrain the boat to the sea area below the horizon
     const seaY = constrain(mouseY, sceneState.horizonY + height * 0.02, height * 0.9);
     inputBoatPos.y = lerp(inputBoatPos.y, seaY, 0.05);
     cursor(HAND);
 
   } else if (inputFollowMode) {
-    // Moving the full canvas width shifts time by 20 % of the day cycle.
-    // Raise the sensitivity constant to make the sky react faster.
+    // Moving the full canvas width advances the cycle by the sensitivity fraction
     const sensitivity = 0.5;
     const delta = (mouseX - inputPrevMouseX) / width * sensitivity;
-    inputProgress   = ((inputProgress + delta) % 1 + 1) % 1;
+    inputProgress = ((inputProgress + delta) % 1 + 1) % 1;
     inputPrevMouseX = mouseX;
     cursor(HAND);
 
   } else {
-    // ── hover glows + cursor ─────────────────────────────────────────────
     let hovered = false;
 
+    // Draw a faint highlight over whichever interactive element the mouse is near
     if (boatVisible &&
         mouseX > boatState.x - boatW * 0.5 &&
         mouseX < boatState.x + boatW * 0.5 &&
@@ -147,8 +144,7 @@ function drawInputMechanic() {
       hovered = true;
       noStroke();
       fill(255, 255, 255, 14);
-      rect(boatState.x - boatW * 0.5, boatState.y - boatH * 2.25,
-           boatW, boatH * 2.95, 4);
+      rect(boatState.x - boatW * 0.5, boatState.y - boatH * 2.25, boatW, boatH * 2.95, 4);
     }
 
     if (sun.visibility > 0.1 && dist(mouseX, mouseY, sun.x, sun.y) < sun.radius * 1.5) {
@@ -171,6 +167,7 @@ function drawInputMechanic() {
   if (inputPaused) drawInputPauseOverlay();
 }
 
+// Draws a small overlay in the top-right corner when the sketch is paused
 function drawInputPauseOverlay() {
   push();
   const pad = 16;
@@ -195,7 +192,6 @@ function drawInputPauseOverlay() {
 }
 
 function keyPressed() {
-  // Space — toggle pause / resume
   if (key === ' ') {
     inputPaused = !inputPaused;
     if (inputPaused) {
@@ -203,37 +199,29 @@ function keyPressed() {
     } else {
       loop();
     }
-    redraw(); // one extra frame to show / hide the pause indicator
-    return false; // prevent the browser from scrolling on spacebar
+    redraw(); // draw one more frame so the pause indicator appears immediately
+    return false; // stop the browser scrolling when space is pressed
   }
 
-  // R — reset the entire scene
   if (key === 'r' || key === 'R') {
-    // Release all drag states
     inputFollowMode = false;
     inputTargetBody = null;
     inputBoatFollowMode = false;
-
-    // Resume draw loop if it was paused
     inputPaused = false;
     loop();
 
-    // Reset perlin ocean and cloud painters to fresh random positions
     if (typeof resetOcean === 'function') resetOcean();
     if (typeof resetClouds === 'function') resetClouds();
 
-    // Recreate the time mechanic (fresh star field; sky cycle continues from millis())
+    // Recreate the time mechanic, then re-apply the patch to the new instance
     if (typeof setupTimeMechanic === 'function') {
       setupTimeMechanic();
-      // Clear patch flag so patchTimeMechanic() will re-apply to the new instance
-      if (typeof timeMechanic !== 'undefined') {
-        timeMechanic._inputPatched = false;
-      }
+      if (typeof timeMechanic !== 'undefined') timeMechanic._inputPatched = false;
       patchTimeMechanic();
     }
   }
 }
 
 function resizeInputMechanic() {
-  // All mechanics read width/height fresh each frame — nothing to reset here
+  // No cached graphics to rebuild; all sizes are read from width/height each frame
 }
