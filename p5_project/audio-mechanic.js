@@ -24,6 +24,11 @@ let waveformHeight = 0;
 let stormBrushes = [];
 let stormWaveLayers = [];
 let foamBrushes = [];
+let stormClouds = [];
+let rainDrops = [];
+let thunderBolts = [];
+let stormSkyProgress = 0;
+let targetStormSkyProgress = 0;
 
 let audioSeaTop = 0;
 let audioSeaBottom = 0;
@@ -51,6 +56,7 @@ function drawAudioMechanic() {
   updateOceanTransition();
   updateOceanPaletteFromTime();
 
+  drawAudioStormSky();
   drawStormOceanLayer();
 
   if (audioDebugVisible) {
@@ -130,6 +136,7 @@ function toggleMic() {
       stormLeaving = false;
       targetStormOpacity = 1;
       targetLayerRevealProgress = 1;
+      targetStormSkyProgress = 1;
 
       // The storm layer fades in across the whole ocean instead of sweeping in from the side.
       for (let i = 0; i < stormWaveLayers.length; i++) {
@@ -147,6 +154,7 @@ function toggleMic() {
     stormLeaving = true;
     targetStormOpacity = 0;
     targetLayerRevealProgress = 0;
+    targetStormSkyProgress = 0;
     micButton.html("START MIC");
   }
 }
@@ -239,10 +247,12 @@ function updateOceanTransition() {
   // Mic off: waves calm down and fade out.
   stormOpacity = lerp(stormOpacity, targetStormOpacity, micStarted ? 0.045 : 0.04);
   layerRevealProgress = lerp(layerRevealProgress, targetLayerRevealProgress, micStarted ? 0.035 : 0.045);
+  stormSkyProgress = lerp(stormSkyProgress, targetStormSkyProgress, micStarted ? 0.032 : 0.038);
 
   if (stormOpacity < 0.01 && !micStarted) {
     stormOpacity = 0;
     layerRevealProgress = 0;
+    stormSkyProgress = 0;
     stormLeaving = false;
     currentIntensity = 0.08;
   }
@@ -296,6 +306,9 @@ function createStormOceanSystem() {
   stormBrushes = [];
   stormWaveLayers = [];
   foamBrushes = [];
+  stormClouds = [];
+  rainDrops = [];
+  thunderBolts = [];
 
   let shorter = min(width, height);
   let layerCount = 12;
@@ -351,6 +364,215 @@ function createStormOceanSystem() {
       offset: random(1000),
       alpha: random(40, 135)
     });
+  }
+
+  createAudioStormSkySystem();
+}
+
+function createAudioStormSkySystem() {
+  stormClouds = [];
+  rainDrops = [];
+  thunderBolts = [];
+
+  let cloudCount = 70;
+  for (let i = 0; i < cloudCount; i++) {
+    stormClouds.push({
+      x: random(-width * 0.55, width * 1.2),
+      y: random(height * 0.015, height * 0.29),
+      w: random(width * 0.16, width * 0.42),
+      h: random(height * 0.045, height * 0.12),
+      speed: random(0.12, 0.36),
+      alpha: random(95, 175),
+      seed: random(1000),
+      puffCount: floor(random(6, 11)),
+      puffs: []
+    });
+
+    let cloud = stormClouds[stormClouds.length - 1];
+    for (let p = 0; p < cloud.puffCount; p++) {
+      let pAmt = p / max(cloud.puffCount - 1, 1);
+      cloud.puffs.push({
+        xOffset: map(pAmt, 0, 1, -cloud.w * 0.45, cloud.w * 0.45) + random(-cloud.w * 0.06, cloud.w * 0.06),
+        yOffset: random(-cloud.h * 0.22, cloud.h * 0.22),
+        wScale: random(0.3, 0.5),
+        hScale: random(0.78, 1.42)
+      });
+    }
+  }
+
+  let rainCount = 320;
+  for (let i = 0; i < rainCount; i++) {
+    rainDrops.push({
+      x: random(width),
+      y: random(audioSeaTop * 0.08, audioSeaTop * 0.55),
+      len: random(height * 0.018, height * 0.045),
+      speed: random(height * 0.005, height * 0.013),
+      drift: random(width * 0.00025, width * 0.00075),
+      alpha: random(35, 95)
+    });
+  }
+}
+
+function drawAudioStormSky() {
+  if (stormSkyProgress <= 0.01 && !micStarted && !stormLeaving) return;
+
+  push();
+  drawingContext.save();
+  drawingContext.globalAlpha = stormSkyProgress;
+
+  drawStormSkyShade();
+  drawStormCloudField();
+  updateAndDrawThunderBolts();
+  drawAudioRain();
+
+  drawingContext.restore();
+  pop();
+}
+
+function drawStormSkyShade() {
+  noStroke();
+
+  let shadeHeight = height * 0.34;
+  let shadeAlpha = 95 * stormSkyProgress;
+
+  for (let i = 0; i < 8; i++) {
+    let amt = i / 7;
+    fill(8, 12, 24, shadeAlpha * map(amt, 0, 1, 1, 0.15));
+    rect(0, shadeHeight * amt, width, shadeHeight / 6);
+  }
+}
+
+function drawStormCloudField() {
+  noStroke();
+
+  // Mic on: clouds enter from left. Mic off: clouds leave to right.
+  let cloudShift = micStarted
+    ? lerp(-width * 0.62, 0, stormSkyProgress)
+    : lerp(width * 1.22, 0, stormSkyProgress);
+
+  let intensity = getWaveHeightEnergy();
+
+  for (let i = 0; i < stormClouds.length; i++) {
+    let c = stormClouds[i];
+    let x = c.x + cloudShift + t * width * 0.0025 * c.speed;
+    let y = c.y + sin(t * 0.2 + c.seed) * height * 0.0012;
+
+    if (x > width * 1.35) x -= width * 1.85;
+
+    let cloudAlpha = c.alpha * map(intensity, 0.055, 0.58, 0.95, 1.35);
+    fill(18, 24, 38, cloudAlpha);
+
+    for (let p = 0; p < c.puffs.length; p++) {
+      let puff = c.puffs[p];
+      let px = x + puff.xOffset + sin(t * 0.12 + c.seed + p) * c.w * 0.003;
+      let py = y + puff.yOffset + sin(t * 0.1 + c.seed + p) * c.h * 0.012;
+      let pw = c.w * puff.wScale;
+      let ph = c.h * puff.hScale;
+      ellipse(px, py, pw, ph);
+    }
+
+    fill(45, 58, 78, cloudAlpha * 0.42);
+    ellipse(x + c.w * 0.06, y - c.h * 0.08, c.w * 0.74, c.h * 0.9);
+  }
+}
+
+function maybeSpawnThunder() {
+  if (!micStarted) return;
+
+  // Thunder is occasional and dramatic, not constant.
+  let soundPush = constrain(voicePulse + waveformHeight, 0, 1.6);
+  let triggerChance = map(soundPush, 0, 1.6, 0.0006, 0.018);
+  if (random() > triggerChance) return;
+
+  let startX = random(width * 0.08, width * 0.92);
+  let startY = random(height * 0.04, height * 0.16);
+  let segments = [];
+  let x = startX;
+  let y = startY;
+
+  for (let i = 0; i < 8; i++) {
+    x += random(-width * 0.03, width * 0.04);
+    y += random(height * 0.025, height * 0.055);
+    segments.push({ x: x, y: y });
+  }
+
+  thunderBolts.push({
+    startX: startX,
+    startY: startY,
+    segments: segments,
+    life: 1,
+    alpha: random(170, 255),
+    flash: random(45, 90)
+  });
+}
+
+function updateAndDrawThunderBolts() {
+  maybeSpawnThunder();
+
+  for (let i = thunderBolts.length - 1; i >= 0; i--) {
+    let b = thunderBolts[i];
+    let boltAlpha = b.alpha * b.life * stormSkyProgress;
+
+    noStroke();
+    fill(210, 230, 255, b.flash * b.life * stormSkyProgress);
+    rect(0, 0, width, height * 0.34);
+
+    strokeWeight(random(1.4, 2.8));
+    stroke(225, 238, 255, boltAlpha);
+    noFill();
+
+    beginShape();
+    vertex(b.startX, b.startY);
+    for (let j = 0; j < b.segments.length; j++) {
+      vertex(b.segments[j].x, b.segments[j].y);
+    }
+    endShape();
+
+    strokeWeight(random(4, 7));
+    stroke(120, 165, 255, boltAlpha * 0.16);
+    beginShape();
+    vertex(b.startX, b.startY);
+    for (let j = 0; j < b.segments.length; j++) {
+      vertex(b.segments[j].x, b.segments[j].y);
+    }
+    endShape();
+
+    b.life -= 0.18;
+    if (b.life <= 0) thunderBolts.splice(i, 1);
+  }
+}
+
+function drawAudioRain() {
+  if (stormSkyProgress <= 0.01) return;
+
+  strokeWeight(1);
+
+  // Rain is mostly vertical, with around 10 degrees of diagonal slant.
+  let rainStrength = map(getWaveHeightEnergy() + voicePulse * 0.2, 0.055, 0.78, 0.42, 0.92);
+  let rainTop = audioSeaTop * 0.12;
+  let rainBottom = height;
+  let slant = tan(radians(10));
+
+  for (let i = 0; i < rainDrops.length; i++) {
+    let r = rainDrops[i];
+    let alphaValue = r.alpha * stormSkyProgress * rainStrength;
+
+    stroke(175, 205, 230, alphaValue);
+
+    let dx = r.len * slant;
+    line(r.x, r.y, r.x + dx, r.y + r.len);
+
+    r.x += r.drift * rainStrength;
+    r.y += r.speed * rainStrength;
+
+    if (r.y > rainBottom + r.len) {
+      r.y = random(rainTop, audioSeaTop * 0.55);
+      r.x = random(width * -0.05, width * 1.05);
+    }
+
+    if (r.x > width * 1.12) {
+      r.x = -width * 0.08;
+    }
   }
 }
 
@@ -738,6 +960,8 @@ function drawFoamBrushes() {
 function resizeAudioMechanic() {
   updateAudioOceanBounds();
   createStormOceanSystem();
+  stormSkyProgress = micStarted ? 1 : 0;
+  targetStormSkyProgress = micStarted ? 1 : 0;
   layerRevealProgress = micStarted ? 1 : 0;
   targetLayerRevealProgress = micStarted ? 1 : 0;
 }
