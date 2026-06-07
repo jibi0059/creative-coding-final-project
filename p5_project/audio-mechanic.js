@@ -1,10 +1,10 @@
 // AUDIO MECHANIC — sound-reactive storm ocean
-// Creative director: audio mechanic
-// This file controls the microphone interaction, storm ocean, rain, thunder, lightning reflection,
-// painterly water texture, and shore foam near the lighthouse.
+// Creative director: Larry Hao - audio mechanic
+// This file controls the microphone interaction with following effects: storm ocean, rain, thunder, 
+// lightning reflection, painterly water texture, and shore foam near the lighthouse.
 // The main idea is: when the mic is turned on, the calm sea transforms into a storm sea.
 // Voice volume changes the wave height, surface movement, foam, and storm intensity.
-// Developed with iterative support from ChatGPT; final behaviour was tested and adjusted manually.
+// Developed with iterative support with ChatGPT; final behaviour was tested and adjusted manually.
 
 let micButton;
 let t = 0;
