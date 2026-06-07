@@ -31,7 +31,14 @@ function setupInputMechanic() {
   patchTimeMechanic();
 }
 
-// Overrides timeMechanic methods so mouse input can control sky and boat separately
+// Replaces (monkey-patches) two timeMechanic methods at runtime so
+// the user can scrub the sky with the mouse while the boat keeps
+// using real time. We store the original method (_nativeUpdate) with
+// .bind() to keep its `this` pointing at timeMechanic, then call it
+// inside our replacement so default behaviour still works when follow
+// mode is off.
+// Technique outside course - JavaScript monkey-patching:
+// https://developer.mozilla.org/en-US/docs/Glossary/Monkey_patch
 function patchTimeMechanic() {
   if (typeof timeMechanic === 'undefined' || timeMechanic._inputPatched) return;
 
