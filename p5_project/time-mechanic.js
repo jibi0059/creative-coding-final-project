@@ -854,7 +854,7 @@ class TimeMechanic {
     const rotation = nightProgress * TWO_PI * 2;
     const sweep = sin(rotation);
     const facingViewer = pow(0.5 + 0.5 * cos(rotation), 1.4);
-    const beamAngle = PI - 0.72 + sweep * 0.28;
+    const beamAngle = PI - 0.52 + sweep * 0.3;
     const beamLength = width * (0.34 + facingViewer * 0.18);
     const beamThickness = height * (0.055 + facingViewer * 0.035);
     const endX = lanternX + cos(beamAngle) * beamLength;
