@@ -106,7 +106,7 @@ let oceanPalette = {
 // p5.AudioIn() creates a microphone input object.
 // createButton() creates the START MIC / MIC OFF button used to activate the browser's audio permission.
 // createStormOceanSystem() builds the wave, brush, cloud, rain, foam, and thunder objects before animation starts.
-// Organised using ChatGPT by OpenAI
+// Code structure refined with support from ChatGPT by OpenAI
 function setupAudioMechanic() {
   mic = new p5.AudioIn();
 
@@ -269,7 +269,7 @@ function audioOceanY(depthRatio) {
 // before microphone/audio input can start.
 // When the mic turns on, the storm ocean, sky, and layer reveal targets move toward 1.
 // When the mic turns off, those targets move back toward 0 so the storm fades away smoothly.
-// Reorganised using ChatGPT by OpenAI
+// Code structure refined with support from ChatGPT by OpenAI 
 function toggleMic() {
   if (!micStarted) {
     userStartAudio();
