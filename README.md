@@ -43,7 +43,9 @@ The lighthouse will also respond to the passage of time. During the daytime, the
 
 ### 🎵 Audio — Larry Hao
 
-The audio mechanic transforms the environmental condition of the seascape through wave behaviour and atmospheric fog movement. Quiet audio creates calm ocean motion and slow drifting fog, while intense sound generates turbulent waves, unstable water movement, and dense atmospheric distortion. Different frequency ranges influence separate environmental systems, allowing the seascape to respond organically to sound intensity. The mechanic also introduces a "memory of sound," where waves and fog retain residual motion after intense audio moments, creating the feeling that the environment has been physically affected by sound. This allows the seascape to behave as a living atmospheric system rather than a direct music visualiser.
+The Audio Mechanic introduces a sound-reactive storm ocean that transforms the painting from a calm seascape into a dynamic and responsive environment. Using live microphone input, voice, clapping, and surrounding sounds are translated into environmental changes rather than traditional audio visualisations. As sound levels increase, waves become larger and more energetic, foam becomes more visible, rainfall intensifies, and occasional lightning appears across the sky. When sound levels decrease, the storm gradually settles, allowing the ocean to return towards a calmer state through smooth transitions that preserve the atmosphere of the artwork.
+
+The mechanic creates a sense of participation by allowing human presence to influence the landscape in real time. Rather than directly controlling an object, sound becomes a force that shapes the behaviour and mood of the environment. Quiet moments create a calmer and more reflective atmosphere, while louder sounds generate a more dramatic and expressive storm. This contrast between calm and turbulence transforms the ocean from a static visual element into a living component of the artwork, encouraging exploration and creating a stronger connection between the audience and the painting.
 
 ---
 
