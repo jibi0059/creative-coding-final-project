@@ -16,7 +16,7 @@ The outcome will reinterpret an existing artwork.
 
 ### Vision
 
-The artwork is heavily inspired by A Seascape, Shipping by Moonlight by Claude Monet, the existing artwork selected for reinterpretation in this project. Rather than directly recreating the painting, the project transforms it into a living atmospheric environment using p5.js. The project explores how sound, movement, time, and interaction can influence the emotional condition of the seascape. Inspired by generative ocean simulations, cinematic fog systems, and atmospheric visual effects commonly found in interactive storytelling, the design focuses on immersion and environmental transformation.
+The artwork is heavily inspired by *A Seascape, Shipping by Moonlight* by Claude Monet, the existing artwork selected for reinterpretation in this project. Rather than directly recreating the painting, the project transforms it into a living atmospheric environment using p5.js. The project explores how sound, movement, time, and interaction can influence the emotional condition of the seascape. Inspired by generative ocean simulations, cinematic fog systems, and atmospheric visual effects commonly found in interactive storytelling, the design focuses on immersion and environmental transformation.
 
 Instead of presenting the artwork as a single frozen moment, the experience continuously evolves through interaction, environmental shifts, and atmospheric transitions. Through the transformation of the painting into a living system, the project aims to create a more emotional, immersive, and experiential interpretation of Monet’s original work.
 
@@ -24,7 +24,7 @@ Instead of presenting the artwork as a single frozen moment, the experience cont
 
 ## Part 2: Techniques
 
-The project combines multiple p5.js techniques to transform Monet’s A Seascape, Shipping by Moonlight from a static painting into a living and interactive digital environment. Each mechanic contributes a different computational approach while sharing a common visual space.
+The project combines multiple p5.js techniques to transform Monet’s *A Seascape, Shipping* by Moonlight from a static painting into a living and interactive digital environment. Each mechanic contributes a different computational approach while sharing a common visual space.
 
 ### Time-Based Animation
 
@@ -105,7 +105,7 @@ connects to our vision of "unfreezing" Monet's painting—instead of watching ti
 
 ## Part 4: Putting It Together👍
 
-All four mechanics share a single canvas representing Monet’s seascape, layered from background to foreground: the time-based sky and lighthouse in the background, the Perlin-driven sea and clouds in the middle ground, the audio-driven waves and fog modulating motion throughout the environment, and the user-input ripples in the foreground. These mechanics actively influence one another—audio intensity amplifies Perlin wave motion, user-generated ripples temporarily disturb the water surface, and the time cycle affects every layer, from the sky and sea to the lighthouse glow.
+All four mechanics share a single canvas representing Monet’s seascape, layered from background to foreground: the time-based sky in the background, the lighthouse and boat as foreground elements, the Perlin-driven sea and clouds in the middle ground, the audio-driven waves and fog modulating motion throughout the environment, and the user-input ripples in the foreground. These mechanics actively influence one another—audio intensity amplifies Perlin wave motion, user-generated ripples temporarily disturb the water surface, and the time cycle affects every layer, from the sky and sea to the lighthouse glow.
 
 The project is unified through a single concept: **Monet’s painting is no longer frozen—it lives, breathes, and responds to interaction.**
 
@@ -138,7 +138,7 @@ Moonlight Drift is designed as an interactive seascape that responds to time, so
 ### 🔍 Individual Mechanics
 
 * Use the mechanic toggle buttons to enable or disable individual systems.
-* This allows each mechanic to be viewed independently or as part of the complete interactive artwork
+* This allows each mechanic to be viewed independently or as part of the complete interactive artwork.
 
 ### 🖱️ Direct Interaction
 
