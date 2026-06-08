@@ -1,13 +1,13 @@
 # Moonlight Drift🌝
 ### An Interactive Reinterpretation of *A Seascape, Shipping by Moonlight* by Claude Monet
 
-Below is a team pitch for our IDEA9103 Creative Coding Final Project. We will transform Monet's *atmospheric nocturnal seascape* into a living, breathing digital environment driven by sound, time, generative motion and audience interaction.
+Below is a team pitch for the IDEA9103 Creative Coding Final Project. Monet’s atmospheric nocturnal seascape is transformed into a living, breathing digital environment driven by sound, time, generative motion, and audience interaction.
 
 ---
 
-## Part 1: Project Direction⛵️
+## Part 1: Inspiration⛵️
 
-We will reinterpret an existing artwork.
+The outcome will reinterpret an existing artwork.
 
 **Artwork**: *A Seascape, Shipping by Moonlight* (c. 1864) by **Claude Monet**
 
@@ -16,7 +16,9 @@ We will reinterpret an existing artwork.
 
 ### Our Vision
 
-Our team has been heavily inspired by *A Seascape, Shipping by Moonlight* by Claude Monet as the existing artwork chosen for reinterpretation in this project. Rather than directly recreating the painting, we aim to transform it into a living atmospheric environment using p5.js. The project explores how sound, movement, time, and interaction can influence the emotional condition of the seascape. Inspired by generative ocean simulations, cinematic fog systems, and atmospheric visual effects seen in interactive storytelling, our design focuses on immersion and environmental transformation. Instead of presenting the artwork as a single frozen moment, our goal is to create a continuously evolving experience where the seascape gradually changes through interaction, environmental shifts, and atmospheric transitions. By transforming the painting into a living system, we aim to create a more emotional, immersive, and experiential interpretation of Monet's original work.
+The artwork is heavily inspired by A Seascape, Shipping by Moonlight by Claude Monet, the existing artwork selected for reinterpretation in this project. Rather than directly recreating the painting, the project transforms it into a living atmospheric environment using p5.js. The project explores how sound, movement, time, and interaction can influence the emotional condition of the seascape. Inspired by generative ocean simulations, cinematic fog systems, and atmospheric visual effects commonly found in interactive storytelling, the design focuses on immersion and environmental transformation.
+
+Instead of presenting the artwork as a single frozen moment, the experience continuously evolves through interaction, environmental shifts, and atmospheric transitions. Through the transformation of the painting into a living system, the project aims to create a more emotional, immersive, and experiential interpretation of Monet’s original work.
 
 
 ---
