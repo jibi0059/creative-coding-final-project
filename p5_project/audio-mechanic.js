@@ -39,6 +39,12 @@
 // and project integration remained the responsibility of the project creator.
 
 let micButton;
+let micHint;
+let micHintOpacity = 1;
+let micHintTargetOpacity = 1;
+let micHintText = "The sea and the weather respond to your voice.";
+let micHintNextText = "The sea and the weather respond to your voice.";
+let micHintSwapping = false;
 let t = 0;
 
 let mic;
@@ -91,6 +97,16 @@ function setupAudioMechanic() {
   micButton.position(30, 30);
   micButton.mousePressed(toggleMic);
 
+  micHint = createDiv(micHintText);
+  micHint.position(30, 60);
+  micHint.style("color", "white");
+  micHint.style("font-size", "14px");
+  micHint.style("font-family", "sans-serif");
+  micHint.style("text-shadow", "0 0 6px rgba(0,0,0,0.8)");
+  micHint.style("pointer-events", "none");
+  micHint.style("opacity", micHintOpacity);
+  micHint.style("transition", "opacity 0.25s ease");
+
   createStormOceanSystem();
 }
 
@@ -103,6 +119,7 @@ function drawAudioMechanic() {
   updateAudioOceanBounds();
   updateSoundLevel();
   updateOceanTransition();
+  updateMicHintFade();
   updateOceanPaletteFromTime();
 
   drawAudioStormSky();
@@ -114,6 +131,32 @@ function drawAudioMechanic() {
 
   oceanTravel += getWaveSpeedEnergy() * width * 0.0018;
   t += 0.01;
+}
+
+// Fades the small instruction text below the microphone button.
+// When the mic state changes, the old sentence fades out first, then the new sentence fades in.
+// This helps the marker understand what to do without using a harsh pop-up window.
+function updateMicHintFade() {
+  if (!micHint) return;
+
+  micHintOpacity = lerp(micHintOpacity, micHintTargetOpacity, 0.12);
+  micHint.style("opacity", micHintOpacity);
+
+  if (micHintSwapping && micHintOpacity < 0.08) {
+    micHintText = micHintNextText;
+    micHint.html(micHintText);
+    micHintTargetOpacity = 1;
+    micHintSwapping = false;
+  }
+}
+
+// Starts a fade-out / text-swap / fade-in sequence for the microphone instruction.
+function changeMicHintText(newText) {
+  if (!micHint || micHintText === newText) return;
+
+  micHintNextText = newText;
+  micHintTargetOpacity = 0;
+  micHintSwapping = true;
 }
 
 // Finds where the audio ocean should begin and end.
@@ -199,6 +242,7 @@ function toggleMic() {
     mic.start(function() {
       micStarted = true;
       micButton.html("MIC OFF");
+      changeMicHintText("Turn off the mic, or use the option button on the right to explore other mechanics.");
       stormLeaving = false;
       targetStormOpacity = 1;
       targetLayerRevealProgress = 1;
@@ -222,6 +266,7 @@ function toggleMic() {
     targetLayerRevealProgress = 0;
     targetStormSkyProgress = 0;
     micButton.html("START MIC");
+    changeMicHintText("The sea and the weather respond to your voice.");
   }
 }
 
