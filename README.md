@@ -105,7 +105,7 @@ The project is unified through a single concept: **Monet’s painting is no long
 
 ---
 
-## Part 5: Interaction Instructions
+## Part 4: Interaction Instructions
 
 ### Experiencing the Artwork
 
@@ -140,7 +140,7 @@ Moonlight Drift is designed as an interactive seascape that responds to time, so
 
 ---
 
-## Part 4: AI Acknowledgement
+## Part 5: AI Acknowledgement
 
 **Jiale Bi (User Input):** 
 
