@@ -24,37 +24,39 @@ Instead of presenting the artwork as a single frozen moment, the experience cont
 
 ## Part 2: Techniques
 
-The project combines multiple p5.js techniques to transform Monet’s *A Seascape, Shipping* by Moonlight from a static painting into a living and interactive digital environment. Each mechanic contributes a different computational approach while sharing a common visual space.
+The project combines several p5.js techniques to transform Monet's *A Seascape, Shipping by Moonlight* from a static painting into a living and interactive digital environment. Each mechanic has its own script file and contributes a different kind of behaviour to the shared canvas.
 
 ### Time-Based Animation
 
-Time-based animation is used to transform Monet's original painting from a single static moment into a continuously evolving environment. Using p5.js timing systems, interpolation (`lerp()`), and cyclical values, the sky gradually transitions through dawn, daytime, sunset, and night. Environmental elements such as the sun, moon, stars, boat, and lighthouse respond to these changes, creating different moods and visual conditions throughout the experience. Rather than presenting a fixed scene, the passage of time becomes part of the artwork itself, allowing the seascape to continuously evolve and reveal new atmospheric states.
+The time-based mechanic uses a repeating p5.js time cycle to move the scene through night, dawn, day, dusk, and back to night. A shared scene state controls the sky colour, sun position, moon position, star visibility, boat movement, lighthouse body colour, lighthouse beam, and light reflections, so all of these elements remain synchronized.
+
+Interpolation is used throughout this mechanic to avoid sudden visual jumps. For example, `lerp()` gradually moves the sun and moon along their arcs, while colour interpolation blends the sky and celestial colours between night, sunrise, midday, sunset, and moonlight. The lighthouse also uses the same time cycle: it remains inactive in daylight, then begins glowing at night and sweeps a soft beam across the sea. This makes time feel like an active force within the artwork rather than a simple background animation.
 
 ### Perlin Noise and Generative Motion
 
-Perlin Noise is used to create smooth and natural movement throughout both the ocean and cloud systems. Unlike traditional random values, Perlin Noise generates gradual and continuous changes that produce more organic motion. In the ocean, hundreds of independently generated brushstroke particles move through a shared noise field, creating the appearance of flowing water and shifting currents. In the sky, cloud objects use similar noise-driven movement to drift naturally across the scene.
+Perlin noise is used to create smooth and natural movement throughout the ocean and cloud systems. Unlike abrupt random values, Perlin noise produces gradual changes, which helps the water and clouds feel more organic. In the ocean, generated marks and particles move through noise-based motion fields to suggest flowing water, shifting currents, foam, and wave energy. In the sky, cloud forms drift and change slowly so they sit naturally over the time-based sky.
 
-Generative systems and randomness are used to control the position, size, speed, lifespan, and behaviour of wave particles and clouds. As particles leave the visible area or reach the end of their lifespan, they are recycled and regenerated, allowing the environment to continuously evolve without repeating exact patterns. Additional boat ripple effects respond to movement from the input mechanic, creating expanding water disturbances that strengthen the connection between user interaction and the surrounding environment.
+Random values are used by the Perlin mechanic to vary the initial positions, sizes, speeds, lifespans, and visual qualities of waves, particles, and clouds. These generated elements are recycled over time, so the sea continues to evolve without repeating exactly. This gives the scene a more painterly and unstable surface, echoing the brushwork and atmosphere of the source painting.
 
 ### Audio Input and Sound Mapping
 
-The audio mechanic uses the p5.Sound library and `p5.AudioIn()` to capture live microphone input. Sound levels are analysed using `mic.getLevel()` and mapped to environmental variables through interpolation and value remapping. Louder sounds increase wave height, wave speed, foam intensity, rainfall, and lightning activity, while quieter sounds gradually return the environment to a calmer state.
+The audio mechanic uses the p5.Sound library and `p5.AudioIn()` to capture live microphone input. Sound levels are analysed with `mic.getLevel()` and mapped to environmental variables using `map()`, `constrain()`, and smoothing values. Louder sounds increase the intensity of the storm ocean, including stronger wave motion, more foam, heavier rain, and lightning effects. Quieter sound levels gradually return the atmosphere toward a calmer state.
 
-Rather than visualising sound directly, audio is translated into environmental behaviour. Human voices, clapping, and surrounding sounds become forces that influence the atmosphere of the seascape, allowing the audience to actively shape the intensity of the storm. This approach strengthens immersion and transforms the artwork into a responsive environment that reacts to human presence in real time.
+Rather than visualising sound as a separate equaliser or waveform, the project translates audio into environmental behaviour. Human voices, clapping, and surrounding sounds become forces that affect the weather and sea surface, allowing the audience to shape the mood of the seascape in real time.
 
 ### User Interaction
 
-User interaction allows the audience to directly control parts of the seascape through mouse and keyboard input. Mouse events are used to detect hovering, clicking, and dragging over interactive elements such as the sun, moon, and boat. Dragging the sun or moon manually adjusts the time-of-day cycle, while dragging the boat repositions it across the sea. Visual hover highlights and cursor changes guide the audience toward interactive areas.
+User interaction allows the audience to directly control parts of the seascape through mouse and keyboard input. Mouse movement and clicking are used to detect when the viewer hovers over or drags the sun, moon, or boat. Dragging the sun or moon manually adjusts the time-of-day cycle, while dragging the boat repositions it across the sea. Visual hover highlights guide the audience toward interactive elements.
 
-The input mechanic also uses keyboard controls, allowing the user to press SPACE to pause or resume the experience and R to reset the scene. Technically, the mechanic connects with the time system through JavaScript monkey-patching, allowing user input to temporarily override the sky’s time cycle while still keeping other elements, such as the boat, connected to the wider scene. This turns the audience from passive viewers into active participants who can shape the artwork’s atmosphere in real time.
+The input mechanic also uses keyboard controls, allowing the user to press SPACE to pause or resume the experience and R to reset the scene. It connects to the time system so the audience can temporarily take control of the sky cycle while the wider scene remains coherent. This turns the audience from passive viewers into active participants who can shape the atmosphere of the artwork.
 
 ### Generative Systems and Randomness
 
-Generative techniques are used throughout the project to create variation and prevent repetitive behaviour. Randomised values control the movement, position, timing, and appearance of environmental elements such as clouds, rain, ripples, foam, and atmospheric effects. This ensures that the artwork continuously changes over time and that no two interactions produce exactly the same outcome.
+Generative techniques are used throughout the project to create variation and prevent repetitive behaviour. Randomised values and reusable particle systems control the movement, position, timing, and appearance of clouds, rain, ripples, foam, storm marks, and atmospheric effects. This keeps the artwork changing over time while still remaining visually connected to the same seascape.
 
 ### Layered Visual Composition
 
-The project is constructed using multiple visual layers that are rendered sequentially within a shared p5.js canvas. The time-based sky forms the background, Perlin-generated clouds and ocean create environmental motion, audio-driven storm effects modify the atmosphere, and user-generated interactions sit above these layers. This layered approach allows each mechanic to operate independently while contributing to a unified visual experience.
+The project is constructed through multiple visual layers rendered in sequence within a shared p5.js canvas. The time-based sky is drawn first as the background. Perlin-generated clouds and sea movement sit above it, audio-driven storm effects add atmospheric intensity, and the time-based foreground objects such as the lighthouse, land, boat, and light reflections are drawn above the water so they remain visible. User-input highlights and interactions sit on top of these layers. This structure allows each mechanic to stay modular while still forming one unified scene.
 
 Together, these techniques transform Monet’s original painting into a responsive digital environment that evolves through time, sound, generative motion, and audience interaction.
 
@@ -73,7 +75,7 @@ Together, these techniques transform Monet’s original painting into a responsi
 
 ### Time-based — Mingtao Qu
 
-My mechanic mainly focuses on the changing sky and lighthouse through a time-based system. The original artwork presents a dramatic nighttime seascape. I want to reinterpret this originally static painting as a dynamic environment that continuously changes over time. By creating a time cycle in p5.js, the sky will transition through different stages of the day, including dawn, daytime, sunset, and nighttime. At the same time, the clouds, sun, moon, and stars in the sky will gradually change throughout the cycle, creating different visual atmospheres and scene variations.
+My mechanic mainly focuses on the changing sky and lighthouse through a time-based system. The original artwork presents a dramatic nighttime seascape. I want to reinterpret this originally static painting as a dynamic environment that continuously changes over time. By creating a time cycle in p5.js, the sky will transition through different stages of the day, including dawn, daytime, sunset, and nighttime. At the same time, the sun, moon, stars, boat, lighthouse, and light reflections gradually change throughout the cycle, creating different visual atmospheres and scene variations.
 
 The lighthouse will also respond to the passage of time. During the daytime, the lighthouse light will appear faint or remain inactive. As the environment gradually shifts into nighttime, the lighthouse will begin glowing and sweeping across the sea, simulating realistic harbour lighting effects. This mechanic allows "time" itself to become part of the visual storytelling. Rather than simply recreating a single frozen moment from the original painting, our project transforms it into a living and continuously evolving scene.
 
@@ -126,8 +128,10 @@ Moonlight Drift is designed as an interactive seascape that responds to time, so
 
 ### Time and Environment
 
+* Watch the automatic day-night cycle move through dawn, daytime, sunset, and night.
+* Notice how the sun, moon, stars, boat, lighthouse, and light reflections change with the time cycle.
 * Click and drag the sun or moon to manually adjust the time of day.
-* Observe how the sky, stars, clouds, colours, and lighthouse change throughout the day-night cycle.
+* At night, watch the lighthouse glow and sweep a soft beam across the sea.
 * The environment continuously evolves even when no interaction occurs.
 
 ### Ocean Motion
@@ -156,9 +160,9 @@ Moonlight Drift is designed as an interactive seascape that responds to time, so
 
 **Mingtao Qu (Time-based):**
 
-I used Codex by OpenAI as a coding assistant while developing the time-based mechanic. Codex helped me plan the modular structure of `time-mechanic.js`, debug p5.js drawing issues, refine the day-night timing system, and improve the organisation and comments in the code.
+I used Codex by OpenAI as a coding assistant while developing my time-based mechanic. Codex helped me organise the code, debug p5.js drawing issues, refine the day-night cycle, and improve the comments.
 
-The final mechanic was reviewed, tested, and adjusted through my own creative decisions. The time-based system uses `millis()` to drive the sky colour cycle, sun and moon movement, star blinking, boat timing, lighthouse lighting, and time-responsive reflections.
+The final mechanic was reviewed, tested, and adjusted through my own creative decisions. It uses p5.js time functions to control the sky colour cycle, sun and moon movement, star blinking, boat timing, lighthouse lighting, and light reflections.
 
 **Jiale Bi (User Input):** 
 
