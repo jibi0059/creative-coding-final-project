@@ -35,7 +35,7 @@
 const SEA_TOP_RATIO = 0.5;
 const TIME_STEP = 0.006;
 const FADE_ALPHA = 8;
-const PAINTER_COUNT = 250;
+const PAINTER_COUNT = 1500;
 //test clouds
 const CLOUD_COUNT = 15;
 //test clouds
@@ -58,9 +58,6 @@ function setupPerlinMechanic() {
 
   resetOcean();
 }
-
-
-
 
 
 function drawPerlinMechanic() {
