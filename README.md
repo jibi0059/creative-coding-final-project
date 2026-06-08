@@ -97,7 +97,7 @@ connects to our vision of "unfreezing" Monet's painting—instead of watching ti
 
 ---
 
-## Part 3: Putting It Together👍
+## Part 4: Putting It Together👍
 
 All four mechanics share a single canvas representing Monet’s seascape, layered from background to foreground: the time-based sky and lighthouse in the background, the Perlin-driven sea and clouds in the middle ground, the audio-driven waves and fog modulating motion throughout the environment, and the user-input ripples in the foreground. These mechanics actively influence one another—audio intensity amplifies Perlin wave motion, user-generated ripples temporarily disturb the water surface, and the time cycle affects every layer, from the sky and sea to the lighthouse glow.
 
@@ -105,7 +105,7 @@ The project is unified through a single concept: **Monet’s painting is no long
 
 ---
 
-## Part 4: Interaction Instructions
+## Part 5: Interaction Instructions
 
 ### Experiencing the Artwork
 
@@ -138,9 +138,20 @@ Moonlight Drift is designed as an interactive seascape that responds to time, so
 * Use the mechanic toggle buttons to enable or disable individual systems.
 * This allows each mechanic to be viewed independently or as part of the complete interactive artwork
 
+### 🖱️ Direct Interaction
+
+* Click **START MIC** to enable microphone interaction.
+* Speak, clap, or make sounds to influence the storm environment.
+* Click and drag the **sun** or **moon** to manually control the time of day.
+* Click and drag the **boat** to reposition it across the sea.
+* Moving the boat creates ripples and disturbances on the water surface.
+* Interactive elements become highlighted when the cursor hovers over them.
+* Press **SPACE** to pause or resume the experience.
+* Press **R** to reset the scene and return all mechanics to their default state.
+
 ---
 
-## Part 5: AI Acknowledgement
+## Part 6: AI Acknowledgement
 
 **Jiale Bi (User Input):** 
 
@@ -162,7 +173,7 @@ I also used Codex to help identify and fix errors, such as function name mismatc
 
 ---
 
-## Part 6: External References
+## Part 7: External References
 
 ### Claude Monet, A Seascape, Shipping by Moonlight (c. 1864)
 National Galleries of Scotland  
