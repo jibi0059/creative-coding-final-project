@@ -14,7 +14,7 @@ The outcome will reinterpret an existing artwork.
 ![A Seascape, Shipping by Moonlight](images/monet_original.jpg)
 *Claude Monet, A Seascape, Shipping by Moonlight, c. 1864. National Galleries of Scotland.*
 
-### Our Vision
+### Vision
 
 The artwork is heavily inspired by A Seascape, Shipping by Moonlight by Claude Monet, the existing artwork selected for reinterpretation in this project. Rather than directly recreating the painting, the project transforms it into a living atmospheric environment using p5.js. The project explores how sound, movement, time, and interaction can influence the emotional condition of the seascape. Inspired by generative ocean simulations, cinematic fog systems, and atmospheric visual effects commonly found in interactive storytelling, the design focuses on immersion and environmental transformation.
 
@@ -23,7 +23,7 @@ Instead of presenting the artwork as a single frozen moment, the experience cont
 
 ---
 
-## Part 2: Mechanics🛠️
+## Part 2: Mechanics and Presentation🛠️
 
 | Team Member | Mechanic |
 |---|---|
@@ -67,12 +67,22 @@ connects to our vision of "unfreezing" Monet's painting—instead of watching ti
 
 ## Part 3: Putting It Together👍
 
-All four mechanics share a single canvas representing Monet's seascape, layered from background to foreground: the Time-based sky and lighthouse at the back, the Perlin-driven sea and clouds in the middle, the Audio-driven waves and fog modulating motion throughout, and the User Input ripples on top. The mechanics actively influence one another—audio intensity amplifies Perlin wave motion; user ripples temporarily disturb the Perlin water surface; the time cycle colours every layer, from sky to sea to lighthouse glow. Conceptually, the project is held together by one idea: **Monet's painting is no longer frozen — it lives, breathes, and responds to you.**
+All four mechanics share a single canvas representing Monet’s seascape, layered from background to foreground: the time-based sky and lighthouse in the background, the Perlin-driven sea and clouds in the middle ground, the audio-driven waves and fog modulating motion throughout the environment, and the user-input ripples in the foreground. These mechanics actively influence one another—audio intensity amplifies Perlin wave motion, user-generated ripples temporarily disturb the water surface, and the time cycle affects every layer, from the sky and sea to the lighthouse glow.
+
+The project is unified through a single concept: **Monet’s painting is no longer frozen—it lives, breathes, and responds to interaction.**
 
 ---
 
-## AI Acknowledgement
+## Part 4: AI Acknowledgement
 
-**Jiale Bi (User Input):** I used Claude (AI) to help plan the 
-overall structure of my mechanic and to review my code for errors. 
+**Jiale Bi (User Input):** 
+
+I used Claude (AI) to help plan the overall structure of my mechanic and to review my code for errors. 
+
 All of the code was written and implemented by me.
+
+**Larry Hao (Audio):** 
+
+ChatGPT by OpenAI was used as a supplementary tool throughout this project. The mechanics were developed using concepts and techniques learned during IDEA9103 tutorials, including p5.js animation, interaction, generative systems, and audio input.
+
+ChatGPT assisted with debugging code, resolving technical issues, exploring alternative p5.js approaches, and improving code organisation and presentation. AI-generated suggestions were reviewed, tested, and refined before being integrated into the final project. Final creative decisions, implementation, and project development remained the responsibility of the project creator.

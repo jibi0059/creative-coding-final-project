@@ -20,8 +20,23 @@
 // - p5 noise and Worley noise are mixed together to create a less digital, more painterly water texture.
 //
 // AI acknowledgement:
-// Developed with iterative support from ChatGPT for code structure, p5.js logic, and refinement ideas.
-// Final design decisions, testing, tuning, and integration were reviewed and adjusted manually.
+// Generative AI was used as a supplementary learning and development tool throughout this project. 
+// The implementation of the mechanics was primarily based on concepts, techniques, 
+// and programming approaches introduced during IDEA9103 tutorials and course materials, 
+// including p5.js animation, interaction design, generative systems, Perlin noise, audio input, 
+// and user interaction.  ChatGPT by OpenAI was used to assist with troubleshooting and debugging 
+// when code produced errors or did not behave as intended. 
+// It was also used to explore alternative approaches within p5.js 
+// that could achieve the same design outcome more efficiently or effectively. 
+// This included suggestions related to animation techniques, sound-reactive behaviours, 
+// interactive elements, code structure, and responsive design.  
+// In addition, ChatGPT was used to help organise, refine, and document the codebase to improve 
+// readability and presentation. Explanatory comments were added throughout the code 
+// to clarify the purpose of key functions, variables, and mechanics. 
+// All AI-generated suggestions were reviewed, tested, modified where necessary, 
+// and integrated into the final project through an iterative development process.  
+// Final creative decisions, visual outcomes, interaction design choices, testing, refinement, 
+// and project integration remained the responsibility of the project creator.
 
 let micButton;
 let t = 0;
