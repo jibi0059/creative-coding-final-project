@@ -159,3 +159,23 @@ ChatGPT assisted with debugging code, resolving technical issues, exploring alte
 In this project, I used Codex as a coding assistant during the development of my Perlin noise mechanic. Codex was mainly used to help me organise the code structure, connect my mechanic with the group’s shared sketch.js system, and adjust the code so it worked correctly with other teammates’ input and time mechanics.
 
 I also used Codex to help identify and fix errors, such as function name mismatches, variable naming issues, layer ordering problems, and interaction bugs related to the moving boat and ripple effect. AI mainly served as an auxiliary tool; the final code design, visual adjustments, implementation methods, and development work were all completed by myself.
+
+---
+
+## Part 6: External References
+
+### Claude Monet, A Seascape, Shipping by Moonlight (c. 1864)
+National Galleries of Scotland  
+https://www.nationalgalleries.org/
+
+Source artwork selected for reinterpretation. The visual composition, atmosphere, colour palette, and maritime setting of the project are inspired by Monet’s original painting.
+
+### p5.js Reference
+https://p5js.org/reference/
+
+Used to understand and implement p5.js functions including animation, drawing, interaction, audio input, responsive canvas behaviour, and generative visual systems.
+
+### IDEA9103 Creative Coding Lectures and Tutorials
+The University of Sydney
+
+Course lectures, tutorials, and workshop exercises provided the foundation for techniques used throughout the project, including Perlin Noise, generative systems, animation principles, user interaction, and creative coding workflows.
