@@ -1,5 +1,4 @@
 let mechanicToggles = {
-  environment: true,
   audio: true,
   perlin: true,
   input: true,
@@ -9,11 +8,6 @@ let mechanicToggles = {
 function setup() {
   createCanvas(windowWidth, windowHeight);
   setupMechanicToggles();
-
-  // Environment mechanic: moon + calm sea preview layer
-  if (typeof setupEnvironmentMechanic === "function") {
-    setupEnvironmentMechanic();
-  }
 
   // Larry's audio mechanic
   if (typeof setupAudioMechanic === "function") {
@@ -38,11 +32,6 @@ function setup() {
 
 function draw() {
   background(8, 12, 28);
-
-  // Environment mechanic: draw first so other mechanics can sit on top
-  if (mechanicToggles.environment && typeof drawEnvironmentMechanic === "function") {
-    drawEnvironmentMechanic();
-  }
 
   // Time mechanic
   if (mechanicToggles.time && typeof drawTimeMechanic === "function") {
@@ -74,11 +63,6 @@ function draw() {
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-
-  // Environment mechanic
-  if (typeof resizeEnvironmentMechanic === "function") {
-    resizeEnvironmentMechanic();
-  }
 
   // Larry's audio mechanic
   if (typeof resizeAudioMechanic === "function") {

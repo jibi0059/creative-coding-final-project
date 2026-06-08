@@ -1,11 +1,11 @@
-# Moonlight Drift🌝
+# Moonlight Drift
 ### An Interactive Reinterpretation of *A Seascape, Shipping by Moonlight* by Claude Monet
 
 Below is a team pitch for the IDEA9103 Creative Coding Final Project. Monet’s atmospheric nocturnal seascape is transformed into a living, breathing digital environment driven by sound, time, generative motion, and audience interaction.
 
 ---
 
-## Part 1: Inspiration⛵️
+## Part 1: Inspiration
 
 The outcome will reinterpret an existing artwork.
 
@@ -28,7 +28,7 @@ The project combines multiple p5.js techniques to transform Monet’s *A Seascap
 
 ### Time-Based Animation
 
-Time-based animation is used to transform Monet's original painting from a single static moment into a continuously evolving environment. Using p5.js timing systems, interpolation (`lerp()`), and cyclical values, the sky gradually transitions through dawn, daytime, sunset, and night. Environmental elements such as the sun, moon, stars, clouds, and lighthouse respond to these changes, creating different moods and visual conditions throughout the experience. Rather than presenting a fixed scene, the passage of time becomes part of the artwork itself, allowing the seascape to continuously evolve and reveal new atmospheric states.
+Time-based animation is used to transform Monet's original painting from a single static moment into a continuously evolving environment. Using p5.js timing systems, interpolation (`lerp()`), and cyclical values, the sky gradually transitions through dawn, daytime, sunset, and night. Environmental elements such as the sun, moon, stars, boat, and lighthouse respond to these changes, creating different moods and visual conditions throughout the experience. Rather than presenting a fixed scene, the passage of time becomes part of the artwork itself, allowing the seascape to continuously evolve and reveal new atmospheric states.
 
 ### Perlin Noise and Generative Motion
 
@@ -60,7 +60,7 @@ Together, these techniques transform Monet’s original painting into a responsi
 
 ---
 
-## Part 3: Mechanics and Presentation🛠️
+## Part 3: Mechanics and Presentation
 
 | Team Member | Mechanic |
 |---|---|
@@ -71,16 +71,16 @@ Together, these techniques transform Monet’s original painting into a responsi
 
 ---
 
-### ⏱️ Time-based — Mingtao Qu
+### Time-based — Mingtao Qu
 
 My mechanic mainly focuses on the changing sky and lighthouse through a time-based system. The original artwork presents a dramatic nighttime seascape. I want to reinterpret this originally static painting as a dynamic environment that continuously changes over time. By creating a time cycle in p5.js, the sky will transition through different stages of the day, including dawn, daytime, sunset, and nighttime. At the same time, the clouds, sun, moon, and stars in the sky will gradually change throughout the cycle, creating different visual atmospheres and scene variations.
 
-The lighthouse will also respond to the passage of time. During the daytime, the lighthouse light will appear faint or remain inactive. As the environment gradually shifts into nighttime, the lighthouse will begin glowing and flashing rhythmically, simulating realistic harbour lighting effects. This mechanic allows "time" itself to become part of the visual storytelling. Rather than simply recreating a single frozen moment from the original painting, our project transforms it into a living and continuously evolving scene.
+The lighthouse will also respond to the passage of time. During the daytime, the lighthouse light will appear faint or remain inactive. As the environment gradually shifts into nighttime, the lighthouse will begin glowing and sweeping across the sea, simulating realistic harbour lighting effects. This mechanic allows "time" itself to become part of the visual storytelling. Rather than simply recreating a single frozen moment from the original painting, our project transforms it into a living and continuously evolving scene.
 
 
 ---
 
-### 🎵 Audio — Larry Hao
+### Audio — Larry Hao
 
 The Audio Mechanic introduces a sound-reactive storm ocean that transforms the painting from a calm seascape into a dynamic and responsive environment. Using live microphone input, voice, clapping, and surrounding sounds are translated into environmental changes rather than traditional audio visualisations. As sound levels increase, waves become larger and more energetic, foam becomes more visible, rainfall intensifies, and occasional lightning appears across the sky. When sound levels decrease, the storm gradually settles, allowing the ocean to return towards a calmer state through smooth transitions that preserve the atmosphere of the artwork.
 
@@ -88,7 +88,7 @@ The mechanic creates a sense of participation by allowing human presence to infl
 
 ---
 
-### 🌊 Perlin Noise + Randomness — Yiming Wang
+### Perlin Noise + Randomness — Yiming Wang
 
 Perlin Noise is used to create natural and smooth flowing movements for the sea and clouds in this artwork. It generates soft, organic changes that make the waves gently rise, fall, ripple, and churn in a realistic way, giving the water a lively and restless feeling. At the same time, the dark storm clouds slowly drift, swirl, and change shape across the sky. This helps bring the original painting to life. The classic artwork shows a dramatic stormy sea and heavy clouds. With Perlin Noise, the water and sky are no longer static — they move continuously and feel alive. Meanwhile, as the boat moves when clicked, the sea surface creates ripples and waves trailing behind it, giving users more visual feedback in response to their input.
 
@@ -96,14 +96,14 @@ This direct interaction makes the audience feel connected to the sea, as if thei
 
 ---
 
-### 🖱️ User Input — Jiale Bi
+### User Input — Jiale Bi
 
 The User Input mechanic lets the audience directly drive the scene with the mouse and keyboard. Clicking and dragging the sun or moon scrubs the time-of-day cycle forwards or backwards, so the viewer can control sunrise, noon, sunset and night by hand. Clicking and dragging the boat lets the audience reposition it across the sea. A hover highlight shows which element is interactive. Pressing SPACE pauses the entire sketch and R resets the scene. This mechanic 
 connects to our vision of "unfreezing" Monet's painting—instead of watching time pass on its own, the audience physically takes hold of the sun, moon and boat, becoming the author of each moment in the seascape.
 
 ---
 
-## Part 4: Putting It Together👍
+## Part 4: Putting It Together
 
 All four mechanics share a single canvas representing Monet’s seascape, layered from background to foreground: the time-based sky in the background, the lighthouse and boat as foreground elements, the Perlin-driven sea and clouds in the middle ground, the audio-driven waves and fog modulating motion throughout the environment, and the user-input ripples in the foreground. These mechanics actively influence one another—audio intensity amplifies Perlin wave motion, user-generated ripples temporarily disturb the water surface, and the time cycle affects every layer, from the sky and sea to the lighthouse glow.
 
@@ -117,30 +117,30 @@ The project is unified through a single concept: **Monet’s painting is no long
 
 Moonlight Drift is designed as an interactive seascape that responds to time, sound, motion, and audience participation.
 
-### 🎵 Sound-Reactive Storm
+### Sound-Reactive Storm
 
 * Click START MIC to enable microphone access.
 * Speak, clap, or make sounds near the microphone.
 * Louder sounds create larger waves, stronger foam, heavier rain, and occasional lightning.
 * Quieter moments allow the storm to gradually settle and return towards a calmer state.
 
-### ⏱️ Time and Environment
+### Time and Environment
 
 * Click and drag the sun or moon to manually adjust the time of day.
 * Observe how the sky, stars, clouds, colours, and lighthouse change throughout the day-night cycle.
 * The environment continuously evolves even when no interaction occurs.
 
-### 🌊 Ocean Motion
+### Ocean Motion
 
 * Watch the sea and clouds move through Perlin Noise-based animation.
 * Ocean movement, cloud behaviour, and atmospheric effects are continuously generated, creating a living environment that never appears exactly the same twice.
 
-### 🔍 Individual Mechanics
+### Individual Mechanics
 
 * Use the mechanic toggle buttons to enable or disable individual systems.
 * This allows each mechanic to be viewed independently or as part of the complete interactive artwork.
 
-### 🖱️ Direct Interaction
+### Direct Interaction
 
 * Click **START MIC** to enable microphone interaction.
 * Speak, clap, or make sounds to influence the storm environment.
@@ -153,6 +153,12 @@ Moonlight Drift is designed as an interactive seascape that responds to time, so
 ---
 
 ## Part 6: AI Acknowledgement
+
+**Mingtao Qu (Time-based):**
+
+I used Codex by OpenAI as a coding assistant while developing the time-based mechanic. Codex helped me plan the modular structure of `time-mechanic.js`, debug p5.js drawing issues, refine the day-night timing system, and improve the organisation and comments in the code.
+
+The final mechanic was reviewed, tested, and adjusted through my own creative decisions. The time-based system uses `millis()` to drive the sky colour cycle, sun and moon movement, star blinking, boat timing, lighthouse lighting, and time-responsive reflections.
 
 **Jiale Bi (User Input):** 
 

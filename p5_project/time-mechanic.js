@@ -1,8 +1,8 @@
 class TimeMechanic {
   constructor() {
-    // This time-based sky mechanic was developed with help from ChatGPT.
+    // This time-based sky mechanic was developed with help from Codex by OpenAI.
     // It uses millis() to create a repeating natural sky cycle: night, dawn, day, dusk, and back to night.
-    // The cycle is intentionally short during development so the full lighting sequence can be reviewed quickly.
+    // The 40-second cycle lets viewers experience the full lighting sequence during a short presentation.
     this.cycleLength = 40000;
     this.stars = this.createStars();
   }
@@ -135,14 +135,11 @@ class TimeMechanic {
   getMoonState(progress, nightAmount) {
     // The moon only appears during the night and travels on its own arc.
     // It is deliberately offset from the sun so the scene has a clear warm-day / cool-night contrast.
-    const nightProgress = progress >= 0.76
-      ? map(progress, 0.76, 1, 0, 0.72)
-      : map(progress, 0, 0.12, 0.72, 1);
-    const constrainedNightProgress = constrain(nightProgress, 0, 1);
-    const moonArc = sin(constrainedNightProgress * PI);
+    const nightProgress = this.getNightProgress(progress);
+    const moonArc = sin(nightProgress * PI);
     const horizonY = height * 0.45;
     const moonRadius = min(width, height) * 0.04;
-    const moonX = lerp(width * 0.08, width * 0.92, constrainedNightProgress);
+    const moonX = lerp(width * 0.08, width * 0.92, nightProgress);
     const moonY = lerp(horizonY + moonRadius * 0.8, height * 0.12, this.smoothStep(moonArc));
     const visibility = constrain(this.smoothStep(moonArc) * nightAmount, 0, 1);
     const coolness = moonArc;
@@ -150,7 +147,7 @@ class TimeMechanic {
     return {
       x: moonX,
       y: moonY,
-      progress: constrainedNightProgress,
+      progress: nightProgress,
       radius: moonRadius,
       visibility,
       coolness,
@@ -164,6 +161,15 @@ class TimeMechanic {
     const lowMoon = color(206, 190, 150);
     const highMoon = color(224, 235, 246);
     return lerpColor(lowMoon, highMoon, coolness);
+  }
+
+  getNightProgress(progress) {
+    // Night is split across the end and beginning of the 0-1 cycle, so this helper keeps all night motion consistent.
+    const nightProgress = progress >= 0.76
+      ? map(progress, 0.76, 1, 0, 0.72)
+      : map(progress, 0, 0.12, 0.72, 1);
+
+    return constrain(nightProgress, 0, 1);
   }
 
   drawSky(sceneState) {
@@ -552,8 +558,8 @@ class TimeMechanic {
       return;
     }
 
-    this.drawBoatReflection(boatX, boatY, boatWidth, boatHeight, lightColor, lightStrength, lightPosition, sceneState, boatState.alpha / 255);
-    this.drawBoatShape(boatX, boatY, boatWidth, boatHeight, boatColor, lightColor, lightStrength, boatState.alpha, true);
+    this.drawBoatReflection(boatX, boatY, boatWidth, boatHeight, lightPosition, sceneState, boatState.alpha / 255);
+    this.drawBoatShape(boatX, boatY, boatWidth, boatHeight, boatColor, lightColor, lightStrength, boatState.alpha);
   }
 
   getBoatState(sceneState) {
@@ -592,7 +598,7 @@ class TimeMechanic {
     };
   }
 
-  drawBoatShape(boatX, boatY, boatWidth, boatHeight, boatColor, lightColor, lightStrength, alpha, showHighlight) {
+  drawBoatShape(boatX, boatY, boatWidth, boatHeight, boatColor, lightColor, lightStrength, alpha) {
     // This helper is reused for the visible boat only; the shadow uses a softer rectangle so it does not look like a duplicate boat.
     const mastX = boatX - boatWidth * 0.08;
     const hullTopY = boatY;
@@ -634,11 +640,9 @@ class TimeMechanic {
       hullTopY - boatHeight * 0.08
     );
 
-    if (showHighlight) {
-      stroke(red(lightColor), green(lightColor), blue(lightColor), 125 * lightStrength);
-      strokeWeight(2);
-      line(boatX - boatWidth * 0.47, hullTopY, boatX + boatWidth * 0.47, hullTopY);
-    }
+    stroke(red(lightColor), green(lightColor), blue(lightColor), 125 * lightStrength);
+    strokeWeight(2);
+    line(boatX - boatWidth * 0.47, hullTopY, boatX + boatWidth * 0.47, hullTopY);
 
     noStroke();
     fill(red(lightColor), green(lightColor), blue(lightColor), 54 * lightStrength);
@@ -675,7 +679,7 @@ class TimeMechanic {
     return sceneState.moon;
   }
 
-  drawBoatReflection(boatX, boatY, boatWidth, boatHeight, lightColor, lightStrength, lightPosition, sceneState, boatAlpha) {
+  drawBoatReflection(boatX, boatY, boatWidth, boatHeight, lightPosition, sceneState, boatAlpha) {
     // The reflection shifts opposite the light source, following simple shadow direction logic.
     // This is a stylised water shadow rather than a physically exact reflection.
     const lightDirection = constrain((lightPosition.x - boatX) / width, -1, 1);
@@ -727,8 +731,8 @@ class TimeMechanic {
   }
 
   drawLighthouse(sceneState) {
-    // Draws the lighthouse from the user's SVG geometry.
-    // The original SVG uses an 800 by 800 viewBox, so these coordinates are scaled into the p5 canvas.
+    // Draws the lighthouse from Mingtao Qu's original SVG geometry.
+    // The SVG uses an 800 by 800 viewBox, so these coordinates are scaled into the p5 canvas.
     const lighthouseX = width * 0.9;
     const baseY = sceneState.horizonY + height * 0.2;
     const towerHeight = height * 0.4;
@@ -771,7 +775,7 @@ class TimeMechanic {
   }
 
   drawSvgLighthouse(originX, baseY, scale, svgCenterX, svgBaseY, towerColor, landColor) {
-    // Recreates the supplied SVG with p5 primitives instead of loading an external file.
+    // Recreates the original lighthouse SVG with p5 primitives instead of loading an external file.
     // x and y values here come directly from the SVG, then are converted by svgX() and svgY().
     const svgX = (x) => originX + (x - svgCenterX) * scale;
     const svgY = (y) => baseY + (y - svgBaseY) * scale;
@@ -842,18 +846,15 @@ class TimeMechanic {
   drawLighthouseNightLight(sceneState, lanternX, lanternY, scale) {
     // Real lighthouse lamps are most useful after dark, so the beam fades out through daylight.
     // The beam sweeps low across the sea, pivoting from the lantern rather than pointing into the sky.
-    const nightVisibility = constrain(map(sceneState.nightAmount, 0.55, 1, 0, 1), 0, 1);
+    const nightCycle = this.getLighthouseNightCycle(sceneState);
+    const nightVisibility = nightCycle.visibility;
 
     if (nightVisibility <= 0.01) {
       return;
     }
 
-    const nightProgress = sceneState.cycleProgress >= 0.76
-      ? map(sceneState.cycleProgress, 0.76, 1, 0, 0.72)
-      : map(sceneState.cycleProgress, 0, 0.12, 0.72, 1);
-    const rotation = nightProgress * TWO_PI * 2;
-    const sweep = sin(rotation);
-    const facingViewer = pow(0.5 + 0.5 * cos(rotation), 1.4);
+    const sweep = sin(nightCycle.rotation);
+    const facingViewer = nightCycle.facingViewer;
     const beamAngle = PI - 0.52 + sweep * 0.3;
     const beamLength = width * (0.34 + facingViewer * 0.18);
     const beamThickness = height * (0.055 + facingViewer * 0.035);
@@ -892,9 +893,7 @@ class TimeMechanic {
     ctx.fill();
     ctx.restore();
 
-    const seaSpotX = endX;
-    const seaSpotY = endY;
-    this.drawLighthouseSeaSpot(sceneState, seaSpotX, seaSpotY, beamThickness, nightVisibility, facingViewer);
+    this.drawLighthouseSeaSpot(sceneState, endX, endY, beamThickness, nightVisibility, facingViewer);
   }
 
   drawLighthouseSeaSpot(sceneState, spotX, spotY, beamThickness, nightVisibility, facingViewer) {
@@ -939,17 +938,14 @@ class TimeMechanic {
 
   drawLighthouseLampGlow(sceneState, lanternX, lanternY, scale) {
     // The lamp glow is soft and local; the long beam is drawn separately behind the tower body.
-    const nightVisibility = constrain(map(sceneState.nightAmount, 0.55, 1, 0, 1), 0, 1);
+    const nightCycle = this.getLighthouseNightCycle(sceneState);
+    const nightVisibility = nightCycle.visibility;
 
     if (nightVisibility <= 0.01) {
       return;
     }
 
-    const nightProgress = sceneState.cycleProgress >= 0.76
-      ? map(sceneState.cycleProgress, 0.76, 1, 0, 0.72)
-      : map(sceneState.cycleProgress, 0, 0.12, 0.72, 1);
-    const rotation = nightProgress * TWO_PI * 2;
-    const facingViewer = pow(0.5 + 0.5 * cos(rotation), 1.4);
+    const facingViewer = nightCycle.facingViewer;
 
     const glowRadius = scale * 46;
     const glowAlpha = nightVisibility * (95 + facingViewer * 95);
@@ -957,6 +953,19 @@ class TimeMechanic {
     circle(lanternX, lanternY, glowRadius);
     fill(255, 248, 211, nightVisibility * 230);
     circle(lanternX, lanternY, scale * 18);
+  }
+
+  getLighthouseNightCycle(sceneState) {
+    // Shared by the long lighthouse beam and the local lamp glow so both rotate and fade together.
+    const visibility = constrain(map(sceneState.nightAmount, 0.55, 1, 0, 1), 0, 1);
+    const rotation = this.getNightProgress(sceneState.cycleProgress) * TWO_PI * 2;
+    const facingViewer = pow(0.5 + 0.5 * cos(rotation), 1.4);
+
+    return {
+      visibility,
+      rotation,
+      facingViewer
+    };
   }
 }
 
