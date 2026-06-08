@@ -5,7 +5,7 @@
 // This file is responsible for the microphone-based interaction in the group artwork.
 // When the user clicks START MIC, the calm ocean changes into a storm ocean.
 // The user's voice volume controls the wave height, surface movement, foam amount, rain intensity,
-// thunder probability, lightning reflection, and the overall storm atmosphere.
+// thunder probability, and the overall storm atmosphere.
 //
 // What this mechanic brings to the artwork:
 // It adds an emotional/environmental response to the painting. Instead of being a fixed scene,
@@ -38,6 +38,15 @@
 // Final creative decisions, visual outcomes, interaction design choices, testing, refinement, 
 // and project integration remained the responsibility of the project creator.
 
+// GLOBAL STATE VARIABLES
+// These variables store the live state of the audio mechanic.
+// In p5.js, variables declared outside functions can be accessed by setup(), draw(),
+// and all helper functions, which is useful for animation systems that need to remember
+// values from frame to frame.
+//
+// The variables below are grouped into interaction state, microphone state, transition state,
+// generated visual objects, and colour state. This makes the mechanic easier to control,
+// debug, and connect with the other group mechanics.
 let micButton;
 let micHint;
 let micHintOpacity = 1;
@@ -86,10 +95,18 @@ let oceanPalette = {
   foam: [235, 232, 210]
 };
 
+// SETUP AND MAIN DRAW LOOP
+// This section connects the audio mechanic to the main p5.js sketch lifecycle.
+// setupAudioMechanic() runs once when the project starts, while drawAudioMechanic()
+// is called repeatedly from sketch.js every frame.
+//
+// The main purpose of this section is to prepare the microphone, create the interface button,
+// display a short instruction hint, and then update/draw the sound-reactive storm environment.
 // Sets up the audio mechanic.
 // p5.AudioIn() creates a microphone input object.
 // createButton() creates the START MIC / MIC OFF button used to activate the browser's audio permission.
 // createStormOceanSystem() builds the wave, brush, cloud, rain, foam, and thunder objects before animation starts.
+// Organised using ChatGPT by OpenAI
 function setupAudioMechanic() {
   mic = new p5.AudioIn();
 
@@ -135,7 +152,8 @@ function drawAudioMechanic() {
 
 // Fades the small instruction text below the microphone button.
 // When the mic state changes, the old sentence fades out first, then the new sentence fades in.
-// This helps the marker understand what to do without using a harsh pop-up window.
+// This provides instructions without using a harsh pop-up window.
+// Refined using ChatGPT by OpenAI
 function updateMicHintFade() {
   if (!micHint) return;
 
@@ -159,6 +177,14 @@ function changeMicHintText(newText) {
   micHintSwapping = true;
 }
 
+// CANVAS BOUNDS, SHARED HORIZON, AND TIME-BASED COLOUR
+// 
+// This section helps the audio mechanic align with the rest of the group artwork.
+// Instead of using fixed pixel positions, the ocean uses the shared horizon from the time mechanic
+// and scales its drawing positions using width, height, and lerp().
+//
+// The colour palette also responds to the time mechanic, so the storm ocean does not feel like
+// a separate layer pasted on top. It becomes darker at night and slightly brighter during day/twilight.
 // Finds where the audio ocean should begin and end.
 // If the time mechanic has a shared horizonY value, this file uses it so all mechanics agree on the sea level.
 // Otherwise, it falls back to height * 0.5, meaning the ocean begins halfway down the canvas.
@@ -179,6 +205,7 @@ function updateAudioOceanBounds() {
 // dayAmount, nightAmount, and twilightAmount are used to make the storm ocean brighter in daytime
 // and darker at night, so the audio mechanic visually belongs to the same world as the sky.
 // constrain() keeps RGB values within safe colour ranges from 0 to 255.
+// Refined using ChatGPT by OpenAI
 function updateOceanPaletteFromTime() {
   // Keep our ocean visually connected to the time mechanic instead of using one fixed blue palette.
   let dayAmount = 0.5;
@@ -229,11 +256,20 @@ function audioOceanY(depthRatio) {
   return lerp(audioSeaTop - height * 0.025, audioSeaBottom + height * 0.025, depthRatio);
 }
 
+// MICROPHONE INTERACTION AND SOUND MAPPING
+// 
+// This section turns live microphone volume into visual behaviour.
+// p5.AudioIn() reads the user's voice or clapping, then mic.getLevel() returns a small volume value.
+// That raw value is cleaned, boosted, smoothed, and mapped into animation controls.
+//
+// These controls affect wave height, wave speed, foam amount, rain strength, thunder chance,
+// and the overall storm intensity. This is the core interaction of this mechanic.
 // Handles the START MIC / MIC OFF button.
 // userStartAudio() and getAudioContext().resume() are needed because browsers require a user gesture
 // before microphone/audio input can start.
 // When the mic turns on, the storm ocean, sky, and layer reveal targets move toward 1.
 // When the mic turns off, those targets move back toward 0 so the storm fades away smoothly.
+// Reorganised using ChatGPT by OpenAI
 function toggleMic() {
   if (!micStarted) {
     userStartAudio();
@@ -350,6 +386,7 @@ function updateSoundLevel() {
 // fastHeight makes the height respond quickly like a recording waveform.
 // The final value is mapped from 0.055 to 0.58, which keeps the maximum wave height controlled.
 // pow() makes the response curve feel more sensitive at lower sound levels.
+// Refined using ChatGPT by OpenAI
 function getWaveHeightEnergy() {
   // Recording-app style vertical response: height follows voice peaks clearly.
   // It rises and falls quickly, while keeping the same maximum cap.
@@ -361,9 +398,18 @@ function getWaveHeightEnergy() {
 }
 
 
+// MATHEMATICAL HELPERS AND TEXTURE GENERATION
+// 
+// This section contains helper functions that make the animation feel smoother and more organic.
+// smoothstep() is used for soft transitions, while p5 noise() and custom Worley noise are used
+// to generate painterly water texture.
+//
+// These functions are not separate visual elements by themselves. Instead, they support the waves,
+// brush marks, foam, and surface movement so the ocean looks less mechanical and more atmospheric.
 // Smoothstep creates a soft transition between 0 and 1.
 // It is used for layer reveal timing, so wave layers fade in gradually instead of popping on suddenly.
 // This function is not built into p5.js, so it is defined manually here.
+// This part is generated and refined using ChatGPT by OpenAI
 function smoothstep(edge0, edge1, x) {
   let amt = constrain((x - edge0) / (edge1 - edge0), 0, 1);
   return amt * amt * (3 - 2 * amt);
@@ -375,6 +421,7 @@ function smoothstep(edge0, edge1, x) {
 // worleyNoise() checks nearby cells and finds the closest feature point, producing a cellular texture.
 // waterCellTexture() mixes this with p5 noise() so the result feels more like painted water than a pure mathematical pattern.
 // This technique goes beyond the basic p5.js tutorial examples, so it is commented here to explain how it works.
+// inspired by Worley Noise Port from https://editor.p5js.org/codingtrain/sketches/QsiCWVczZ; Refined using ChatGPT by OpenAI.
 function hash2D(ix, iy) {
   // Small deterministic hash for Worley feature points.
   let n = sin(ix * 127.1 + iy * 311.7) * 43758.5453123;
@@ -415,6 +462,7 @@ function waterCellTexture(x, y, strength) {
 // The ocean should always travel left to right because the lighthouse/shore is on the right side.
 // This makes the later shore foam feel physically logical: waves move toward land, then break into foam.
 // Voice input slightly increases speed, but height is the main sound response so the ocean does not become chaotic.
+// Created and modified using ChatGPT by OpenAI
 function getWaveSpeedEnergy() {
   // Keep the audio ocean flowing close to the calm Perlin ocean speed.
   // Sound changes the wave height more than the horizontal travel speed.
@@ -429,6 +477,14 @@ function getWaveSpeedEnergy() {
   }
 }
 
+// STORM TRANSITION CONTROL
+// 
+// This section controls how the storm appears and disappears.
+// Instead of switching instantly between calm and storm states, lerp() gradually moves opacity,
+// wave reveal, and sky reveal values toward their targets.
+//
+// This creates a cinematic fade-in and fade-out effect, making the audio mechanic feel integrated
+// with Monet's atmospheric painting rather than behaving like a sudden digital overlay.
 // Handles mic on/off transition values.
 // stormOpacity controls the visibility of the storm ocean.
 // layerRevealProgress controls the layer-by-layer wave reveal.
@@ -482,6 +538,7 @@ function getLayerRevealAmount(index) {
 // Similar to getLayerRevealAmount(), but for small brush marks instead of large wave layers.
 // yRatio controls whether a mark is near the top/surface of the ocean or deeper down.
 // This keeps the painterly texture reveal consistent with the layered wave reveal.
+// Refined using ChatGPT by OpenAI
 function getBrushRevealAmount(yRatio) {
   // Same logic as the wave layers, but based on brush depth.
   let order = micStarted ? 1 - yRatio : yRatio;
@@ -507,6 +564,15 @@ function drawMicDebug() {
 }
 
 
+// GENERATED STORM SYSTEM DATA
+// 
+// This section creates the reusable arrays of visual objects used by the storm.
+// Instead of manually drawing every wave, cloud, rain drop, and foam mark one by one,
+// the code generates many objects with randomised properties.
+//
+// Each object stores its own position, size, speed, opacity, and movement offsets.
+// During draw(), these stored values are updated and rendered repeatedly, creating a layered,
+// generative storm system.
 // Builds the reusable data objects for the storm ocean.
 // stormWaveLayers store the large layered wave shapes.
 // stormBrushes store the small painterly marks that move across the wave surface.
@@ -629,6 +695,13 @@ function createAudioStormSkySystem() {
   }
 }
 
+// STORM SKY DRAWING
+// 
+// This section draws the atmospheric weather layer above the sea.
+// It uses transparent shapes, moving cloud ellipses, slanted rain lines, and occasional lightning.
+//
+// The sky responds to microphone energy, so louder sound makes the environment feel heavier,
+// darker, wetter, and more dramatic.
 // Draws the complete storm sky.
 // It uses drawingContext.globalAlpha so the entire sky system can fade in and out together.
 // The order matters: shade first, then clouds, then thunder, then rain.
@@ -652,6 +725,7 @@ function drawAudioStormSky() {
 // Draws a dark gradient-like shade over the top part of the sky.
 // This makes the clouds feel heavier and helps the storm visually separate from the calm daytime sky.
 // Multiple transparent rect() bands are used instead of one hard rectangle to create a softer fade.
+// Refined using ChatGPT by OpenAI
 function drawStormSkyShade() {
   noStroke();
 
@@ -669,6 +743,7 @@ function drawStormSkyShade() {
 // Clouds slide in from the left when the mic turns on, and leave to the right when the mic turns off.
 // Each cloud is made of multiple ellipse() puffs with very small sin() movement, creating slow natural drifting.
 // The alpha changes with wave energy, so stronger sound makes the storm feel denser.
+// Generated and refined using ChatGPT by OpenAI
 function drawStormCloudField() {
   noStroke();
 
@@ -707,6 +782,7 @@ function drawStormCloudField() {
 // voicePulse and waveformHeight increase the chance of lightning, connecting thunder to sound intensity.
 // random() is used for bolt start position and jagged segment points.
 // The thunder is intentionally occasional so it feels like a dramatic event, not constant flashing.
+// Generated and refined using ChatGPT by OpenAI
 function maybeSpawnThunder() {
   if (!micStarted) return;
 
@@ -745,6 +821,7 @@ function maybeSpawnThunder() {
 // Instead of using a rectangle flash, this draws layered ellipse() shapes around the bolt position.
 // This creates a softer cloud-light effect and avoids visible hard edges.
 // The glow fades using the bolt's life value.
+// Generated and refined using ChatGPT by OpenAI
 function drawSoftThunderGlow(b) {
   noStroke();
 
@@ -773,6 +850,7 @@ function drawSoftThunderGlow(b) {
 // Real water does not reflect lightning as one perfect line, so this uses many short ellipse() marks.
 // The marks spread wider as they move down the ocean, and their alpha fades with the thunder life value.
 // noise() and sin() make the reflection shimmer with the moving water.
+// Generated and refined using ChatGPT by OpenAI
 function drawThunderWaterReflection(b) {
   if (stormOpacity <= 0.01) return;
 
@@ -813,6 +891,7 @@ function drawThunderWaterReflection(b) {
 // Updates and draws all active thunder bolts.
 // Each bolt is drawn as a jagged beginShape()/vertex() line, with a thicker low-alpha blue glow behind it.
 // The life value decreases each frame, so the lightning and its reflection fade quickly.
+// Generated and refined using ChatGPT by OpenAI
 function updateAndDrawThunderBolts() {
   maybeSpawnThunder();
 
@@ -852,6 +931,7 @@ function updateAndDrawThunderBolts() {
 // Each rain drop is a line() with a slight 10-degree slant using tan(radians(10)).
 // Rain speed and opacity are connected to wave energy and voicePulse, so stronger audio creates heavier rain.
 // When a drop reaches the bottom, it respawns back inside the cloud area rather than from the top of the screen.
+// Generated and refined using ChatGPT by OpenAI
 function drawAudioRain() {
   if (stormSkyProgress <= 0.01) return;
 
@@ -887,6 +967,14 @@ function drawAudioRain() {
 }
 
 
+// STORM OCEAN DRAWING
+//
+// This section draws the main visual outcome of the mechanic: the sound-reactive ocean.
+// It combines large beginShape() wave bodies, ellipse() brush marks, foam highlights,
+// painterly texture, and shore interaction near the lighthouse.
+//
+// The drawing order is important: atmosphere first, then moving texture, then wave bodies,
+// then foam and shore-break details. This gives the water depth and makes the storm feel layered.
 // Draws the complete storm ocean layer.
 // drawingContext.globalAlpha applies the mic on/off opacity to the whole ocean layer.
 // drawingContext.clip() prevents accidental drawing outside the canvas area.
@@ -924,6 +1012,7 @@ function drawStormOceanLayer() {
 // First, horizontal rect() bands create a full dark water surface that covers the calm Perlin ocean when the mic is on.
 // Then many ellipse() dabs create a Monet-like painterly texture so this ocean still matches the artwork style.
 // noise(), random(), and Worley-based waterCellTexture() create subtle colour variation across the surface.
+// Refined using ChatGPT by OpenAI
 function drawAudioOceanAtmosphere() {
   // When the mic is active, this becomes the full ocean surface rather than a transparent overlay.
   noStroke();
@@ -949,6 +1038,7 @@ function drawAudioOceanAtmosphere() {
   }
 
   // Monet-like short dabs so the active ocean visually belongs with the Perlin calm sea.
+  // Refined using ChatGPT by OpenAI
   for (let i = 0; i < 190; i++) {
     let yRatio = random(0.03, 1);
     let y = audioOceanY(yRatio);
@@ -1032,6 +1122,7 @@ function updateSingleStormWaveMotion(layer, index) {
 // Each mark follows a wave layer using getStormWaveY(), so the texture moves with the water instead of floating randomly.
 // ellipse() is used instead of hard rectangles to match the soft Perlin ocean style.
 // Sound input affects vertical movement, brightness, and texture density.
+// Generated and refined using ChatGPT by OpenAI
 function drawStormBrushFieldFromLayers() {
   rectMode(CENTER);
   noStroke();
@@ -1102,6 +1193,7 @@ function drawStormBrushFieldFromLayers() {
 // The top edge of the shape follows getStormWaveY(), while the bottom closes below the screen.
 // Each layer has different colour, amplitude, speed, wavelength, and reveal timing, creating depth.
 // The wave colour also receives subtle Worley texture variation so the body is not too flat.
+// Generated and refined using ChatGPT by OpenAI
 function drawSingleStormWave(layer, index) {
   let leftEdge = layer.tail;
   let rightEdge = layer.front;
@@ -1157,6 +1249,7 @@ function drawSingleStormWave(layer, index) {
 // These marks are drawn near the wave surface using ellipse().
 // voicePulse and waveformHeight increase markCount, so louder sound creates more surface activity.
 // noise() and waterCellTexture() vary the colour so the marks feel painterly rather than mechanical.
+// Generated and Refined using ChatGPT by OpenAI
 function drawPainterlyWaveTexture(layer, index, amp, wavelength, speed, leftEdge, rightEdge, localOffset, layerReveal) {
   let depth = index / max(stormWaveLayers.length - 1, 1);
   let markCount = int(map(depth, 0, 1, 8, 18) + voicePulse * 18 + waveformHeight * 24);
@@ -1190,6 +1283,7 @@ function drawPainterlyWaveTexture(layer, index, amp, wavelength, speed, leftEdge
 // It combines several sine waves for layered water motion, p5 noise() for organic irregularity,
 // voicePulse for quick audio ripples, and waveformHeight for recording-app-like vertical height changes.
 // travelOffset makes the whole wave pattern move left to right.
+// Generated and refined using ChatGPT by OpenAI
 function getStormWaveY(layer, x, amp, wavelength, speed, travelOffset) {
   // One-direction wave travel: subtracting positive travel from x makes crests move left-to-right.
   let travellingX = x - travelOffset;
@@ -1215,6 +1309,7 @@ function getStormWaveY(layer, x, amp, wavelength, speed, travelOffset) {
 // Draws small foam marks on wave crests when the waves are strong enough.
 // getStormWaveY() finds the crest position, then ellipse() draws small pale foam highlights.
 // Foam only appears above a wave-energy threshold so calm water does not look over-foamed.
+// Generated and refined using ChatGPT by OpenAI
 function drawStormCrestFoam(layer, amp, wavelength, speed, leftEdge, rightEdge, localOffset) {
   if (getWaveHeightEnergy() < 0.13) return;
 
@@ -1240,6 +1335,7 @@ function drawStormCrestFoam(layer, amp, wavelength, speed, leftEdge, rightEdge, 
 // These are reusable foamBrush objects that move with each wave layer.
 // rect() is used here to create short streak-like highlights.
 // Foam count increases with wave height, voicePulse, and waveformHeight, making louder sound visually rougher.
+// Generated and refined using ChatGPT by OpenAI
 function drawFoamBrushes() {
   if (getWaveHeightEnergy() < 0.14) return;
 
@@ -1275,6 +1371,12 @@ function drawFoamBrushes() {
 }
 
 
+// RESPONSIVE RESIZING AND LIGHTHOUSE SHORE INTERACTION
+// 
+// This final section keeps the mechanic responsive and connected to the shared artwork.
+// resizeAudioMechanic() rebuilds the generated system when the browser size changes.
+// drawLighthouseShoreBreak() creates foam and turbulence near the right-side lighthouse/shore area,
+// so the audio waves feel like they physically belong inside the full seascape.
 // Rebuilds the audio mechanic when the browser window changes size.
 // The canvas is responsive, so all wave, cloud, rain, and foam objects must be recalculated for the new width/height.
 // The transition values are preserved depending on whether the mic is currently active.
@@ -1292,6 +1394,7 @@ function resizeAudioMechanic() {
 // A diagonal shore line is used because the lighthouse land mass extends from the right side into the ocean.
 // ellipse(), line(), and bezierVertex() are used for foam strokes, splashes, curled foam, and reflected turbulence.
 // This helps integrate the audio ocean with the time mechanic's lighthouse scene.
+// Refined using ChatGPT by OpenAI
 function drawLighthouseShoreBreak() {
   // The time mechanic places the lighthouse and rocky land on the right side.
   // This creates a diagonal shore-break instead of a vertical foam wall.
@@ -1309,6 +1412,7 @@ function drawLighthouseShoreBreak() {
   noStroke();
 
   // Soft shaded water beside the rocky land, suggesting the shore blocks the wave flow.
+  // Refined using ChatGPT by OpenAI
   for (let i = 0; i < 9; i++) {
     let amt = i / 8;
     let x = lerp(shoreStartX, width, amt);
@@ -1318,6 +1422,7 @@ function drawLighthouseShoreBreak() {
   }
 
   // Broken foam strokes follow a diagonal implied coastline from upper-left to lower-right.
+  // Refined using ChatGPT by OpenAI
   let foamCount = int(map(foamStrength, 0.35, 1.25, 24, 78));
   for (let i = 0; i < foamCount; i++) {
     let yRatio = random(0.18, 0.98);
@@ -1337,6 +1442,7 @@ function drawLighthouseShoreBreak() {
   }
 
   // Short curved foam lines show waves curling back after striking the rocks.
+  // Refined using ChatGPT by OpenAI
   strokeWeight(1.2);
   noFill();
   let curlCount = int(map(foamStrength, 0.35, 1.25, 6, 18));
@@ -1373,6 +1479,7 @@ function drawLighthouseShoreBreak() {
   }
 
   // Subtle reflected turbulence beside the shore, aligned with left-to-right wave travel.
+  // Refined using ChatGPT by OpenAI
   strokeWeight(1);
   for (let i = 0; i < 18; i++) {
     let yRatio = random(0.2, 0.96);
