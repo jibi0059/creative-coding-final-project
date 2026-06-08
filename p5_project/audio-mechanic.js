@@ -376,11 +376,11 @@ function getWaveSpeedEnergy() {
 // lerp() is used so the transition feels animated and cinematic rather than instant.
 function updateOceanTransition() {
   // Smooth fade transition instead of left/right sweep.
-  // Mic on: storm layer fades in as a calm sea, then reacts to sound.
-  // Mic off: waves calm down and fade out.
-  stormOpacity = lerp(stormOpacity, targetStormOpacity, micStarted ? 0.045 : 0.04);
-  layerRevealProgress = lerp(layerRevealProgress, targetLayerRevealProgress, micStarted ? 0.035 : 0.045);
-  stormSkyProgress = lerp(stormSkyProgress, targetStormSkyProgress, micStarted ? 0.032 : 0.038);
+  // Mic on uses slower lerp values so the storm sea enters gently rather than appearing too intensely.
+  // Mic off stays slightly faster so the storm can still calm down and fade out clearly.
+  stormOpacity = lerp(stormOpacity, targetStormOpacity, micStarted ? 0.022 : 0.04);
+  layerRevealProgress = lerp(layerRevealProgress, targetLayerRevealProgress, micStarted ? 0.018 : 0.045);
+  stormSkyProgress = lerp(stormSkyProgress, targetStormSkyProgress, micStarted ? 0.016 : 0.038);
 
   if (stormOpacity < 0.01 && !micStarted) {
     stormOpacity = 0;
