@@ -53,7 +53,11 @@ The mechanic creates a sense of participation by allowing human presence to infl
 
 ### 🌊 Perlin Noise + Randomness — Yiming Wang
 
+Perlin Noise is used to create natural and smooth flowing movements for the sea and clouds in this artwork. It generates soft, organic changes that make the waves gently rise, fall, ripple, and churn in a realistic way, giving the water a lively and restless feeling. At the same time, the dark storm clouds slowly drift, swirl, and change shape across the sky. This helps bring the original painting to life. The classic artwork shows a dramatic stormy sea and heavy clouds. With Perlin Noise, the water and sky are no longer static — they move continuously and feel alive. Meanwhile, as the boat moves when clicked, the sea surface creates ripples and waves trailing behind it, giving users more visual feedback in response to their input.
 
+This direct interaction makes the audience feel connected to the sea, as if their actions can stir nature’s energy. Together with the ever‑moving clouds and churning waves driven by Perlin Noise, the artwork transforms from a static painting into a living, breathing digital world. Viewers not only witness the power of the ocean but also leave their own trace upon it, deepening their sense of presence and the passage of time.
+
+---
 
 ### 🖱️ User Input — Jiale Bi
 
