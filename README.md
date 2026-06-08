@@ -87,3 +87,9 @@ All of the code was written and implemented by me.
 ChatGPT by OpenAI was used as a supplementary tool throughout this project. The mechanics were developed using concepts and techniques learned during IDEA9103 lectures and tutorials, alongside external resources such as p5.js.org, including p5.js animation, interaction, generative systems, and audio input.
 
 ChatGPT assisted with debugging code, resolving technical issues, exploring alternative p5.js approaches, and improving code organisation and presentation. AI-generated suggestions were reviewed, tested, and refined before being integrated into the final project. Final creative decisions, implementation, and project development remained the responsibility of the project creator.
+
+**Yiming Wang (Perlin Noise + Randomness):** 
+
+In this project, I used Codex as a coding assistant during the development of my Perlin noise mechanic. Codex was mainly used to help me organise the code structure, connect my mechanic with the group’s shared sketch.js system, and adjust the code so it worked correctly with other teammates’ input and time mechanics.
+
+I also used Codex to help identify and fix errors, such as function name mismatches, variable naming issues, layer ordering problems, and interaction bugs related to the moving boat and ripple effect. AI mainly served as an auxiliary tool; the final code design, visual adjustments, implementation methods, and development work were all completed by myself.
