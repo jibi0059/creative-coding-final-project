@@ -20,8 +20,23 @@
 // - p5 noise and Worley noise are mixed together to create a less digital, more painterly water texture.
 //
 // AI acknowledgement:
-// Developed with iterative support from ChatGPT for code structure, p5.js logic, and refinement ideas.
-// Final design decisions, testing, tuning, and integration were reviewed and adjusted manually.
+// Generative AI was used as a supplementary learning and development tool throughout this project. 
+// The implementation of the mechanics was primarily based on concepts, techniques, 
+// and programming approaches introduced during IDEA9103 tutorials and course materials, 
+// including p5.js animation, interaction design, generative systems, Perlin noise, audio input, 
+// and user interaction.  ChatGPT by OpenAI was used to assist with troubleshooting and debugging 
+// when code produced errors or did not behave as intended. 
+// It was also used to explore alternative approaches within p5.js 
+// that could achieve the same design outcome more efficiently or effectively. 
+// This included suggestions related to animation techniques, sound-reactive behaviours, 
+// interactive elements, code structure, and responsive design.  
+// In addition, ChatGPT was used to help organise, refine, and document the codebase to improve 
+// readability and presentation. Explanatory comments were added throughout the code 
+// to clarify the purpose of key functions, variables, and mechanics. 
+// All AI-generated suggestions were reviewed, tested, modified where necessary, 
+// and integrated into the final project through an iterative development process.  
+// Final creative decisions, visual outcomes, interaction design choices, testing, refinement, 
+// and project integration remained the responsibility of the project creator.
 
 let micButton;
 let t = 0;
@@ -376,11 +391,11 @@ function getWaveSpeedEnergy() {
 // lerp() is used so the transition feels animated and cinematic rather than instant.
 function updateOceanTransition() {
   // Smooth fade transition instead of left/right sweep.
-  // Mic on: storm layer fades in as a calm sea, then reacts to sound.
-  // Mic off: waves calm down and fade out.
-  stormOpacity = lerp(stormOpacity, targetStormOpacity, micStarted ? 0.045 : 0.04);
-  layerRevealProgress = lerp(layerRevealProgress, targetLayerRevealProgress, micStarted ? 0.035 : 0.045);
-  stormSkyProgress = lerp(stormSkyProgress, targetStormSkyProgress, micStarted ? 0.032 : 0.038);
+  // Mic on uses slower lerp values so the storm sea enters gently rather than appearing too intensely.
+  // Mic off stays slightly faster so the storm can still calm down and fade out clearly.
+  stormOpacity = lerp(stormOpacity, targetStormOpacity, micStarted ? 0.022 : 0.04);
+  layerRevealProgress = lerp(layerRevealProgress, targetLayerRevealProgress, micStarted ? 0.018 : 0.045);
+  stormSkyProgress = lerp(stormSkyProgress, targetStormSkyProgress, micStarted ? 0.016 : 0.038);
 
   if (stormOpacity < 0.01 && !micStarted) {
     stormOpacity = 0;
