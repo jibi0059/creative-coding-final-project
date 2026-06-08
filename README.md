@@ -105,6 +105,41 @@ The project is unified through a single concept: **Monet’s painting is no long
 
 ---
 
+## Part 5: Interaction Instructions
+
+### Experiencing the Artwork
+
+Moonlight Drift is designed as an interactive seascape that responds to time, sound, motion, and audience participation.
+
+### 🎵 Sound-Reactive Storm
+
+* Click START MIC to enable microphone access.
+* Speak, clap, or make sounds near the microphone.
+* Louder sounds create larger waves, stronger foam, heavier rain, and occasional lightning.
+* Quieter moments allow the storm to gradually settle and return towards a calmer state.
+
+### ⏱️ Time and Environment
+
+* Click and drag the sun or moon to manually adjust the time of day.
+* Observe how the sky, stars, clouds, colours, and lighthouse change throughout the day-night cycle.
+* The environment continuously evolves even when no interaction occurs.
+
+### 🌊 Ocean Motion
+
+* Watch the sea and clouds move through Perlin Noise-based animation.
+* Ocean movement, cloud behaviour, and atmospheric effects are continuously generated, creating a living environment that never appears exactly the same twice.
+
+### 🖱️ Direct Interaction
+
+* 
+
+### 🔍 Individual Mechanics
+
+* Use the mechanic toggle buttons to enable or disable individual systems.
+* This allows each mechanic to be viewed independently or as part of the complete interactive artwork
+
+---
+
 ## Part 4: AI Acknowledgement
 
 **Jiale Bi (User Input):** 
