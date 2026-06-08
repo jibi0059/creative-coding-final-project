@@ -1,6 +1,8 @@
 class TimeMechanic {
   constructor() {
-    // This time-based sky mechanic was developed with help from Codex by OpenAI.
+    // This time-based sky mechanic was developed with assistance from Codex by OpenAI.
+    // Codex helped organise the structure, debug p5.js drawing issues, and refine comments.
+    // The final code was reviewed, tested, and adjusted manually.
     // It uses millis() to create a repeating natural sky cycle: night, dawn, day, dusk, and back to night.
     // The 40-second cycle lets viewers experience the full lighting sequence during a short presentation.
     this.cycleLength = 40000;
@@ -33,7 +35,8 @@ class TimeMechanic {
   }
 
   positiveFraction(value) {
-    // JavaScript remainder can be negative, so this keeps generated positions inside 0-1.
+    // Extracts the fractional part and keeps the result between 0 and 1,
+    // even when the input value is negative.
     return value - floor(value);
   }
 
@@ -175,18 +178,22 @@ class TimeMechanic {
   drawSky(sceneState) {
     // Draw only the background part of the time mechanic here.
     // Foreground objects are drawn later so teammate clouds and sea can sit behind them.
+    push();
     this.drawSkyGradient(sceneState);
     this.drawMoon(sceneState);
     this.drawSun(sceneState);
     this.drawStars(sceneState);
     this.drawSkyGrain(sceneState);
+    pop();
   }
 
   drawForeground(sceneState) {
     // Draw foreground time-based objects after teammate sea and cloud layers.
+    push();
     this.drawCelestialReflections(sceneState);
     this.drawLighthouse(sceneState);
     this.drawBoat(sceneState);
+    pop();
   }
 
   drawSkyGradient(sceneState) {
@@ -300,6 +307,8 @@ class TimeMechanic {
   drawMoonGlow(sceneState) {
     // A very soft glow keeps the crescent atmospheric but less intense than the sun.
     // The glow is slightly offset toward the thicker part of the crescent so it does not appear centred on empty space.
+    // drawingContext gives access to the underlying HTML Canvas API.
+    // It is used here for gradients, blur filters, and screen blending to create softer light effects than basic p5.js shapes.
     const ctx = drawingContext;
     const glowCenterX = sceneState.moon.x - sceneState.moon.radius * 0.18;
     const glowCenterY = sceneState.moon.y;
@@ -969,6 +978,8 @@ class TimeMechanic {
   }
 }
 
+// Public wrapper functions for sketch.js.
+// These functions let the main sketch use this mechanic without directly managing the class instance.
 let timeMechanic;
 let latestTimeSceneState;
 
