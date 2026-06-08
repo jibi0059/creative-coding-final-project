@@ -20,10 +20,41 @@ The artwork is heavily inspired by A Seascape, Shipping by Moonlight by Claude M
 
 Instead of presenting the artwork as a single frozen moment, the experience continuously evolves through interaction, environmental shifts, and atmospheric transitions. Through the transformation of the painting into a living system, the project aims to create a more emotional, immersive, and experiential interpretation of Monet’s original work.
 
+---
+
+## Part 2: Techniques
+
+The project combines multiple p5.js techniques to transform Monet’s A Seascape, Shipping by Moonlight from a static painting into a living and interactive digital environment. Each mechanic contributes a different computational approach while sharing a common visual space.
+
+### Time-Based Animation
+
+...
+
+### Perlin Noise and Generative Motion
+
+...
+
+### Audio Input and Sound Mapping
+
+The audio mechanic uses the p5.Sound library and p5.AudioIn() to capture live microphone input. Sound levels are analysed using mic.getLevel() and mapped to environmental variables through interpolation and value remapping. Louder sounds increase wave height, wave speed, foam intensity, rainfall, and lightning activity, while quieter sounds gradually return the environment to a calmer state. Rather than visualising sound directly, audio is translated into environmental behaviour to create a more immersive experience.
+
+### User Interaction
+
+...
+
+### Generative Systems and Randomness
+
+Generative techniques are used throughout the project to create variation and prevent repetitive behaviour. Randomised values control the movement, position, timing, and appearance of environmental elements such as clouds, rain, ripples, foam, and atmospheric effects. This ensures that the artwork continuously changes over time and that no two interactions produce exactly the same outcome.
+
+### Layered Visual Composition
+
+The project is constructed using multiple visual layers that are rendered sequentially within a shared p5.js canvas. The time-based sky forms the background, Perlin-generated clouds and ocean create environmental motion, audio-driven storm effects modify the atmosphere, and user-generated interactions sit above these layers. This layered approach allows each mechanic to operate independently while contributing to a unified visual experience.
+
+Together, these techniques transform Monet’s original painting into a responsive digital environment that evolves through time, sound, generative motion, and audience interaction.
 
 ---
 
-## Part 2: Mechanics and Presentation🛠️
+## Part 3: Mechanics and Presentation🛠️
 
 | Team Member | Mechanic |
 |---|---|
