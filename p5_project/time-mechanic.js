@@ -3,7 +3,7 @@ class TimeMechanic {
     // This time-based sky mechanic was developed with help from ChatGPT.
     // It uses millis() to create a repeating natural sky cycle: night, dawn, day, dusk, and back to night.
     // The cycle is intentionally short during development so the full lighting sequence can be reviewed quickly.
-    this.cycleLength = 20000;
+    this.cycleLength = 40000;
     this.stars = this.createStars();
   }
 
@@ -894,27 +894,34 @@ class TimeMechanic {
 
     const seaSpotX = endX;
     const seaSpotY = endY;
-    this.drawLighthouseSeaSpot(seaSpotX, seaSpotY, beamThickness, nightVisibility, facingViewer);
+    this.drawLighthouseSeaSpot(sceneState, seaSpotX, seaSpotY, beamThickness, nightVisibility, facingViewer);
   }
 
-  drawLighthouseSeaSpot(spotX, spotY, beamThickness, nightVisibility, facingViewer) {
+  drawLighthouseSeaSpot(sceneState, spotX, spotY, beamThickness, nightVisibility, facingViewer) {
     // Soft elliptical light on the sea where the lighthouse beam lands.
     // It is brighter than the beam itself, like a concentrated reflection on the water surface.
     const ctx = drawingContext;
     const spotWidth = beamThickness * (1.55 + facingViewer * 0.65);
     const spotHeight = beamThickness * (0.58 + facingViewer * 0.18);
     const spotAlpha = nightVisibility * (0.34 + facingViewer * 0.34);
+    // The light remains attached to the beam end, but small wave-like offsets make the sea reflection shimmer.
+    // These offsets are time-based, not random, so the lighthouse mechanic stays controlled by the time cycle.
+    const waveTime = sceneState.cycleProgress * TWO_PI * 18;
+    const waveDriftX = sin(waveTime) * beamThickness * 0.08 + sin(waveTime * 0.43) * beamThickness * 0.05;
+    const waveDriftY = cos(waveTime * 0.72) * beamThickness * 0.05 + sin(waveTime * 1.31) * beamThickness * 0.035;
+    const shimmerX = spotX + waveDriftX;
+    const shimmerY = spotY + waveDriftY;
 
     ctx.save();
     ctx.globalCompositeOperation = "screen";
     ctx.filter = `blur(${max(8, beamThickness * 0.16)}px)`;
 
     const spotGradient = ctx.createRadialGradient(
-      spotX,
-      spotY,
+      shimmerX,
+      shimmerY,
       0,
-      spotX,
-      spotY,
+      shimmerX,
+      shimmerY,
       spotWidth * 0.55
     );
 
@@ -924,7 +931,7 @@ class TimeMechanic {
 
     ctx.fillStyle = spotGradient;
     ctx.beginPath();
-    ctx.ellipse(spotX, spotY, spotWidth * 0.5, spotHeight * 0.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(shimmerX, shimmerY, spotWidth * 0.5, spotHeight * 0.5, 0, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();
