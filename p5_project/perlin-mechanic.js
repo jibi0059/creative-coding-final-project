@@ -1,3 +1,37 @@
+// perlin-mechanic.js
+// Perlin Noise and Randomness - Yiming Wang
+//
+// Purpose of this file:
+// This file is responsible for the calm ocean and sky clouds in the group artwork.
+// Through Perlin noise and randomness, countless floating wave particles are
+// scattered across the sea surface, creating a realistic ocean look, while clouds
+// drift randomly across the sky.
+//
+// What this mechanic brings to the artwork:
+// It gives the painting a natural, organic motion. The movement of wave particles
+// and clouds is smooth and unpredictable, which enhances the sense of depth and
+// liveliness in both the sea and the sky.
+//
+// Main p5.js techniques used:
+// - noise() generates Perlin noise to control the movement direction of wave
+//   particles and clouds, making the motion more natural and smooth.
+// - map(), lerp(), sin(), and cos() convert noise values into angles, colors,
+//   sizes, and movement speeds.
+// - ellipse() and rect() draw sea brushstrokes, base water areas, and cloud shapes.
+// - random() generates initial positions, sizes, speeds, lifespans, and different
+//   movement paths for particles.
+// - class creates a large number of independent wave particles and cloud objects,
+//   each with its own position, velocity, and variation pattern.
+// - Alpha transparency in fill() creates semi‑transparent overlays, giving the
+//   sea a sense of trailing, layering, and painterly quality.
+//
+// AI acknowledgement:
+// Developed with support from Codex for code structure and error checking.
+// Final design decisions, testing, tuning, and integration were reviewed and
+// adjusted manually.
+
+
+
 const SEA_TOP_RATIO = 0.5;
 const TIME_STEP = 0.006;
 const FADE_ALPHA = 8;
