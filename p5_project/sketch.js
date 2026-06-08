@@ -20,17 +20,17 @@ function setup() {
     setupAudioMechanic();
   }
 
-  // Perlin noise mechanic
+  // Yiming's Perlin noise mechanic
   if (typeof setupPerlinMechanic === "function") {
     setupPerlinMechanic();
   }
 
-  // Input mechanic
+  // Jiale's Input mechanic
   if (typeof setupInputMechanic === "function") {
     setupInputMechanic();
   }
 
-  // Time mechanic
+  // Mingtao's Time mechanic
   if (typeof setupTimeMechanic === "function") {
     setupTimeMechanic();
   }

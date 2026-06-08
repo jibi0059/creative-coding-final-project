@@ -45,11 +45,17 @@
 const RIPPLE_DISTANCE = 18;
 const RIPPLE_LIFE = 70;
 
+// Ocean settings
+// SEA_TOP_RATIO = 0.5 means the ocean starts halfway down the canvas
+// TIME_STEP controls how fast the Perlin noise animation changes
+// FADE_ALPHA controls how quickly old ocean strokes fade
+// PAINTER_COUNT controls how many moving ocean brushstrokes are drawn
 const SEA_TOP_RATIO = 0.5;
 const TIME_STEP = 0.006;
 const FADE_ALPHA = 8;
 const PAINTER_COUNT = 1500;
-//test clouds : same logic with ocean
+//// Cloud settings.
+// Clouds use similar Perlin noise movement logic to the ocean painters.
 const CLOUD_COUNT = 15;
 //test clouds
 let cloudPart;
@@ -66,6 +72,8 @@ let previousBoatRipplePos = null;
 
 
 function setupPerlinMechanic() {
+  //create separate graphics layers for this mechanic
+  //these layers are later drawn onto the main canvas using image()
   perlinLayer = createGraphics(width, height);
   perlinLayer.noStroke();
 
@@ -92,7 +100,7 @@ function drawPerlinMechanic() {
 
   }
 
-  //boat 
+  //boat: draw ripples when the boat is being moved by the input mechanic
   updateBoatRipples(seaTop);
   drawBoatRipples();
   
@@ -106,9 +114,6 @@ function drawPerlinMechanic() {
   }
 
   image(cloudPart, 0, 0);
-
-
-
 
   time += TIME_STEP;
 }
@@ -127,6 +132,9 @@ function resetClouds() {
 
 function drawCloudBackground() {
   cloudPart.clear();
+  //avoids covering the sun, moon, or sky made by teammates
+  //the previous code that set up occlusion for teammates
+
 }
 
 //test clouds
@@ -159,7 +167,9 @@ class CloudPainter {
 
     this.x += cos(angle) * this.speed;
     this.y += sin(angle) * this.speed * 0.4;
-
+    
+    
+    //same logoc with ocean: cloud leaves the sky area, recycle it
     if (
       this.x > width + this.size ||
       this.y < 20 ||
@@ -179,7 +189,7 @@ class CloudPainter {
 
     const cloudWidth = this.size * map(noiseValue, 0, 1, 1.2, 2.2);
     const cloudHeight = this.size * map(noiseValue, 0, 1, 0.25, 0.55);
-
+    //drawn of three overlapping ellipses
     cloudPart.fill(0, 0, 100, this.alpha);
     cloudPart.ellipse(this.x, this.y, cloudWidth, cloudHeight);
 
@@ -219,6 +229,8 @@ function drawOceanBackground(seaTop) {
   perlinLayer.fill(8, 12, 28, FADE_ALPHA);
   perlinLayer.rect(0, seaTop, width, height - seaTop);
 //Trail layer
+//Transparent dark overlay fades older strokes
+
 
   perlinLayer.fill(20, 80, 140, 35);
   perlinLayer.rect(0, seaTop, width, height - seaTop);
@@ -259,7 +271,7 @@ function updateBoatRipples(seaTop) {
     previousBoatRipplePos.x,
     previousBoatRipplePos.y
   );
-//new ripple after the boat has moved far enough
+//create a new ripple after the boat has moved far enough
   if (movement > RIPPLE_DISTANCE) {
     boatRipples.push(new BoatRipple(boatX, boatY));
     previousBoatRipplePos.set(boatX, boatY);
@@ -267,6 +279,7 @@ function updateBoatRipples(seaTop) {
 }
 
 function drawBoatRipples() {
+  //for to Loop backwards
   //finished ripples can be removed safely
   for (let i = boatRipples.length - 1; i >= 0; i--) {
     boatRipples[i].update();
@@ -296,13 +309,14 @@ class OceanPainter {
     this.age = 0;
     //limite life to kill some painters
     this.seed = random(1000);
+    //gives each painter a slightly different noise path
     //aim to move to different routes
   }
 
 
 
   move() {
-
+    //x and y multipliers control the scale of the noise field
     const seaTop = height * SEA_TOP_RATIO;
     const noiseValue = noise(
       this.x * 0.004,
@@ -327,7 +341,7 @@ class OceanPainter {
     
     ) {
       this.reset();
-      //reycycle
+      //reycycle painters when they leave the sea area or get too old
   }
 }
    
@@ -358,7 +372,7 @@ class OceanPainter {
 
     perlinLayer.fill(r, g, b, alpha);
     perlinLayer.ellipse(this.x, this.y, w * 2.5, h);
-
+    //Long, flat ellipses behave like small water brushstrokes
   }
 }
 
@@ -366,6 +380,7 @@ class OceanPainter {
 //boat
 class BoatRipple {
   constructor(x, y) {
+    //start from the current position
     this.x = x;
     this.y = y;
     this.age = 0;
