@@ -28,19 +28,25 @@ The project combines multiple p5.js techniques to transform Monet’s A Seascape
 
 ### Time-Based Animation
 
-...
+Time-based animation is used to transform Monet's original painting from a single static moment into a continuously evolving environment. Using p5.js timing systems, interpolation (`lerp()`), and cyclical values, the sky gradually transitions through dawn, daytime, sunset, and night. Environmental elements such as the sun, moon, stars, clouds, and lighthouse respond to these changes, creating different moods and visual conditions throughout the experience. Rather than presenting a fixed scene, the passage of time becomes part of the artwork itself, allowing the seascape to continuously evolve and reveal new atmospheric states.
 
 ### Perlin Noise and Generative Motion
 
-...
+Perlin Noise is used to create smooth and natural movement throughout both the ocean and cloud systems. Unlike traditional random values, Perlin Noise generates gradual and continuous changes that produce more organic motion. In the ocean, hundreds of independently generated brushstroke particles move through a shared noise field, creating the appearance of flowing water and shifting currents. In the sky, cloud objects use similar noise-driven movement to drift naturally across the scene.
+
+Generative systems and randomness are used to control the position, size, speed, lifespan, and behaviour of wave particles and clouds. As particles leave the visible area or reach the end of their lifespan, they are recycled and regenerated, allowing the environment to continuously evolve without repeating exact patterns. Additional boat ripple effects respond to movement from the input mechanic, creating expanding water disturbances that strengthen the connection between user interaction and the surrounding environment.
 
 ### Audio Input and Sound Mapping
 
-The audio mechanic uses the p5.Sound library and p5.AudioIn() to capture live microphone input. Sound levels are analysed using mic.getLevel() and mapped to environmental variables through interpolation and value remapping. Louder sounds increase wave height, wave speed, foam intensity, rainfall, and lightning activity, while quieter sounds gradually return the environment to a calmer state. Rather than visualising sound directly, audio is translated into environmental behaviour to create a more immersive experience.
+The audio mechanic uses the p5.Sound library and `p5.AudioIn()` to capture live microphone input. Sound levels are analysed using `mic.getLevel()` and mapped to environmental variables through interpolation and value remapping. Louder sounds increase wave height, wave speed, foam intensity, rainfall, and lightning activity, while quieter sounds gradually return the environment to a calmer state.
+
+Rather than visualising sound directly, audio is translated into environmental behaviour. Human voices, clapping, and surrounding sounds become forces that influence the atmosphere of the seascape, allowing the audience to actively shape the intensity of the storm. This approach strengthens immersion and transforms the artwork into a responsive environment that reacts to human presence in real time.
 
 ### User Interaction
 
-...
+User interaction allows the audience to directly control parts of the seascape through mouse and keyboard input. Mouse events are used to detect hovering, clicking, and dragging over interactive elements such as the sun, moon, and boat. Dragging the sun or moon manually adjusts the time-of-day cycle, while dragging the boat repositions it across the sea. Visual hover highlights and cursor changes guide the audience toward interactive areas.
+
+The input mechanic also uses keyboard controls, allowing the user to press SPACE to pause or resume the experience and R to reset the scene. Technically, the mechanic connects with the time system through JavaScript monkey-patching, allowing user input to temporarily override the sky’s time cycle while still keeping other elements, such as the boat, connected to the wider scene. This turns the audience from passive viewers into active participants who can shape the artwork’s atmosphere in real time.
 
 ### Generative Systems and Randomness
 
@@ -129,10 +135,6 @@ Moonlight Drift is designed as an interactive seascape that responds to time, so
 * Watch the sea and clouds move through Perlin Noise-based animation.
 * Ocean movement, cloud behaviour, and atmospheric effects are continuously generated, creating a living environment that never appears exactly the same twice.
 
-### 🖱️ Direct Interaction
-
-* 
-
 ### 🔍 Individual Mechanics
 
 * Use the mechanic toggle buttons to enable or disable individual systems.
@@ -142,12 +144,11 @@ Moonlight Drift is designed as an interactive seascape that responds to time, so
 
 * Click **START MIC** to enable microphone interaction.
 * Speak, clap, or make sounds to influence the storm environment.
-* Click and drag the **sun** or **moon** to manually control the time of day.
+* Click and drag the **sun** or **moon** to control the time of day.
 * Click and drag the **boat** to reposition it across the sea.
-* Moving the boat creates ripples and disturbances on the water surface.
-* Interactive elements become highlighted when the cursor hovers over them.
+* Hover over the sun, moon, or boat to discover interactive elements.
 * Press **SPACE** to pause or resume the experience.
-* Press **R** to reset the scene and return all mechanics to their default state.
+* Press **R** to reset the scene.
 
 ---
 
