@@ -226,6 +226,25 @@ Course lectures, tutorials, and workshop exercises provided the foundation for t
   negative values, since JavaScript's `%` operator can return negatives.  
   Reference: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Remainder
 
+**Larry Hao (Audio):**
+
+- **Worley-noise-inspired texture system** — Used to create broken, cellular water texture so the storm ocean feels less digitally smooth and more painterly. This technique is combined with p5.js `noise()` to support the wave surface, cloud atmosphere, and storm texture.  
+  Reference: https://editor.p5js.org/codingtrain/sketches/QsiCWVczZ
+
+- **Manual `smoothstep()` transition** — Used to create smoother fade-in and fade-out transitions for the storm ocean, wave layers, and storm sky. This helps the microphone interaction appear gradually instead of switching on suddenly.  
+  Reference: https://beta.p5js.org/reference/p5/smoothstep/
+
+- **`drawingContext` for grouped layer control** — Used to access the underlying HTML Canvas drawing context through p5.js. In this mechanic, it controls grouped opacity, clipping, and layer fading so the storm sky and ocean can appear as integrated atmospheric layers.  
+  Reference: https://p5js.org/reference/p5/drawingContext/
+
+- **Browser audio permission handling** — Used to make the microphone start correctly after a user interaction. `p5.AudioIn()` reads live microphone input, while `getAudioContext().resume()` helps resume the browser audio context when the START MIC button is clicked.  
+  References:  
+  https://p5js.org/reference/p5.sound/p5.AudioIn/  
+  https://p5js.org/reference/p5/getAudioContext/
+
+- **Responsive system rebuilding** — Used to rebuild generated storm objects such as waves, clouds, rain, foam, and brush marks when the browser window is resized. This keeps the audio mechanic aligned with the responsive canvas and the shared ocean horizon.  
+  Reference: https://editor.p5js.org/amcc/sketches/ZYQncTSI4
+
 **Yiming Wang (Perlin Noise + Randomness):** 
 
 - **splice()** - 
