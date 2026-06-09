@@ -258,3 +258,17 @@ Course lectures, tutorials, and workshop exercises provided the foundation for t
 - **layer and image**: - 
  I used image() to composite my separate ocean and cloud layers onto the main canvas. This helps keep my Perlin mechanic organised and separate from my teammates' drawings.
  Reference:https://konvajs.org/api/Konva.Layer.html
+
+**Mingtao Qu (Time-based):**
+
+- **HTML Canvas API / `drawingContext` for soft lighting** -
+  I used p5.js `drawingContext` to access the underlying HTML Canvas API. This allowed me to create radial gradients, linear gradients, blur filters, and screen blending effects that are difficult to achieve with basic p5.js shapes alone. These techniques were used for the sun halo, moon glow, lighthouse beam, lighthouse sea light spot, and reflections on the water.
+  Reference: https://p5js.org/reference/p5/drawingContext/
+
+- **Canvas gradients and blur effects** -
+  I used `createRadialGradient()`, `createLinearGradient()`, and `filter = "blur(...)"` to create soft light falloff instead of building light only from hard-edged p5.js shapes. This helped the sun, moon, and lighthouse lighting appear more atmospheric and less flat.
+  Reference: https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D
+
+- **Blend modes for light effects** -
+  I used `globalCompositeOperation = "screen"` through `drawingContext` to make light layers blend more naturally with the sky and sea. This was used to make glows and reflections feel brighter without completely covering the background.
+  Reference: https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
