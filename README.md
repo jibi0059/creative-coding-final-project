@@ -254,3 +254,7 @@ Course lectures, tutorials, and workshop exercises provided the foundation for t
 - **typeof**: - 
  typeof checks are used in updateBoatRipples() to safely connect my Perlin   mechanic with my teammate's input mechanic. My ripple effect needs to read inputBoatFollowMode and inputBoatPos from the input code. The typeof checks make sure these variables exist before my code uses them, which prevents errors if the input mechanic is not loaded or the boat is not being dragged.
  Reference: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof
+
+- **layer and image**: - 
+ I used image() to composite my separate ocean and cloud layers onto the main canvas. This helps keep my Perlin mechanic organised and separate from my teammates' drawings.
+ Reference:https://konvajs.org/api/Konva.Layer.html
