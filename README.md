@@ -201,3 +201,28 @@ Used to understand and implement p5.js functions including animation, drawing, i
 The University of Sydney
 
 Course lectures, tutorials, and workshop exercises provided the foundation for techniques used throughout the project, including Perlin Noise, generative systems, animation principles, user interaction, and creative coding workflows.
+
+---
+
+## Part 8: Techniques Outside the Course
+
+**Jiale Bi (User Input):**
+
+- **Monkey-patching (replacing methods at runtime)** — My mechanic replaces 
+  the time mechanic's `update()` and `getBoatState()` methods at runtime so 
+  that mouse input can control the sky and the boat independently (the sky 
+  follows the mouse while the boat keeps using real time). I keep a reference 
+  to each original method and call it inside my replacement so the default 
+  behaviour still works when follow mode is off. This runtime method-override 
+  technique was not taught in class.  
+  Reference: https://en.wikipedia.org/wiki/Monkey_patch
+
+- **`.bind()` for preserving `this`** — Used together with the monkey-patching 
+  above to make sure the stored original methods still refer to the correct 
+  `timeMechanic` object when called.  
+  Reference: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind
+
+- **Modulo wrap-around `((x % 1) + 1) % 1`** — Used to keep the time-cycle 
+  progress looping smoothly within the 0–1 range while correctly handling 
+  negative values, since JavaScript's `%` operator can return negatives.  
+  Reference: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Remainder
