@@ -244,3 +244,11 @@ Course lectures, tutorials, and workshop exercises provided the foundation for t
 
 - **Responsive system rebuilding** — Used to rebuild generated storm objects such as waves, clouds, rain, foam, and brush marks when the browser window is resized. This keeps the audio mechanic aligned with the responsive canvas and the shared ocean horizon.  
   Reference: https://editor.p5js.org/amcc/sketches/ZYQncTSI4
+
+**Yiming Wang (Perlin Noise + Randomness):** 
+
+**splice()**: In my code, I used it to remove boat ripple objects after they finished fading out: boatRipples.splice(i, 1); This means: start at position i in the boatRipples array and remove 1 item. This keeps the array from becoming too large and helps the animation stay smooth.
+Reference: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice
+
+**typeof**: typeof checks are used in updateBoatRipples() to safely connect my Perlin mechanic with my teammate's input mechanic. My ripple effect needs to read inputBoatFollowMode and inputBoatPos from the input code. The typeof checks make sure these variables exist before my code uses them, which prevents errors if the input mechanic is not loaded or the boat is not being dragged.
+Reference: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof
