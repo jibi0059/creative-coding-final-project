@@ -1,13 +1,13 @@
 # Moonlight Drift
 ### An Interactive Reinterpretation of *A Seascape, Shipping by Moonlight* by Claude Monet
 
-Below is a team pitch for the IDEA9103 Creative Coding Final Project. Monet’s atmospheric nocturnal seascape is transformed into a living, breathing digital environment driven by sound, time, generative motion, and audience interaction.
+This README documents the final IDEA9103 Creative Coding Major Project. Monet’s atmospheric nocturnal seascape is transformed into a living, breathing digital environment driven by sound, time, generative motion, and audience interaction.
 
 ---
 
 ## Part 1: Inspiration
 
-The outcome will reinterpret an existing artwork.
+The project reinterprets an existing artwork.
 
 **Artwork**: *A Seascape, Shipping by Moonlight* (c. 1864) by **Claude Monet**
 
@@ -75,7 +75,7 @@ Together, these techniques transform Monet’s original painting into a responsi
 
 ### Time-based — Mingtao Qu
 
-My mechanic mainly focuses on the changing sky and lighthouse through a time-based system. The original artwork presents a dramatic nighttime seascape. I want to reinterpret this originally static painting as a dynamic environment that continuously changes over time. By creating a time cycle in p5.js, the sky will transition through different stages of the day, including dawn, daytime, sunset, and nighttime. At the same time, the sun, moon, stars, boat, lighthouse, and light reflections gradually change throughout the cycle, creating different visual atmospheres and scene variations.
+This mechanic focuses on the changing sky and lighthouse through a time-based system. The original artwork presents a dramatic nighttime seascape. This mechanic reinterprets the originally static painting as a dynamic environment that continuously changes over time. By creating a time cycle in p5.js, the sky will transition through different stages of the day, including dawn, daytime, sunset, and nighttime. At the same time, the sun, moon, stars, boat, lighthouse, and light reflections gradually change throughout the cycle, creating different visual atmospheres and scene variations.
 
 The lighthouse will also respond to the passage of time. During the daytime, the lighthouse light will appear faint or remain inactive. As the environment gradually shifts into nighttime, the lighthouse will begin glowing and sweeping across the sea, simulating realistic harbour lighting effects. This mechanic allows "time" itself to become part of the visual storytelling. Rather than simply recreating a single frozen moment from the original painting, our project transforms it into a living and continuously evolving scene.
 
