@@ -130,7 +130,6 @@ Moonlight Drift is designed as an interactive seascape that responds to time, so
 
 * Watch the automatic day-night cycle move through dawn, daytime, sunset, and night.
 * Notice how the sun, moon, stars, boat, lighthouse, and light reflections change with the time cycle.
-* Click and drag the sun or moon to manually adjust the time of day.
 * At night, watch the lighthouse glow and sweep a soft beam across the sea.
 * The environment continuously evolves even when no interaction occurs.
 
