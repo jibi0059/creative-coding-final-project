@@ -161,7 +161,7 @@ Moonlight Drift is designed as an interactive seascape that responds to time, so
 
 I used Codex by OpenAI as a coding assistant while developing my time-based mechanic. Codex helped me organise the code, debug p5.js drawing issues, refine the day-night cycle, and improve the comments.
 
-The final mechanic was reviewed, tested, and adjusted through my own creative decisions. It uses p5.js time functions to control the sky colour cycle, sun and moon movement, star blinking, boat timing, lighthouse lighting, and light reflections.
+The final mechanic was reviewed, tested, and adjusted through my own creative decisions.
 
 **Jiale Bi (User Input):** 
 
