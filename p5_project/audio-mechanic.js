@@ -421,7 +421,9 @@ function smoothstep(edge0, edge1, x) {
 // worleyNoise() checks nearby cells and finds the closest feature point, producing a cellular texture.
 // waterCellTexture() mixes this with p5 noise() so the result feels more like painted water than a pure mathematical pattern.
 // This technique goes beyond the basic p5.js tutorial examples, so it is commented here to explain how it works.
-// inspired by Worley Noise Port from https://editor.p5js.org/codingtrain/sketches/QsiCWVczZ; Refined using ChatGPT by OpenAI.
+// Worley noise technique inspired by The Coding Train example:
+// https://editor.p5js.org/codingtrain/sketches/QsiCWVczZ
+// Adapted and refined for this project with support from ChatGPT by OpenAI.
 function hash2D(ix, iy) {
   // Small deterministic hash for Worley feature points.
   let n = sin(ix * 127.1 + iy * 311.7) * 43758.5453123;
