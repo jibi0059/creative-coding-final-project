@@ -1,6 +1,6 @@
 class TimeMechanic {
   constructor() {
-    // This time-based sky mechanic was developed with assistance from Codex by OpenAI.
+    // This time-based mechanic was developed with assistance from Codex by OpenAI.
     // Codex helped organise the structure, debug p5.js drawing issues, and refine comments.
     // The final code was reviewed, tested, and adjusted manually.
     // It uses millis() to create a repeating natural sky cycle: night, dawn, day, dusk, and back to night.
@@ -765,15 +765,13 @@ class TimeMechanic {
     // The tower remains white, but it is tinted by the current environment light.
     // Daylight keeps it bright; night light cools and darkens it so it belongs to the scene.
     const nightWhite = color(116, 128, 148);
-    const twilightWhite = color(205, 204, 194);
     const dayWhite = color(255, 255, 255);
-    const twilightAmount = sceneState.twilightAmount;
+    const warmTwilightTint = color(226, 211, 190);
+    const daylightBlend = this.smoothStep(sceneState.dayAmount);
+    const environmentWhite = lerpColor(nightWhite, dayWhite, daylightBlend);
+    const twilightTintStrength = sceneState.twilightAmount * (1 - daylightBlend * 0.45) * 0.22;
 
-    if (sceneState.dayAmount > 0.55) {
-      return lerpColor(twilightWhite, dayWhite, sceneState.dayAmount);
-    }
-
-    return lerpColor(nightWhite, twilightWhite, twilightAmount);
+    return lerpColor(environmentWhite, warmTwilightTint, twilightTintStrength);
   }
 
   getLighthouseLandColor(sceneState) {
@@ -853,7 +851,7 @@ class TimeMechanic {
   }
 
   drawLighthouseNightLight(sceneState, lanternX, lanternY, scale) {
-    // Real lighthouse lamps are most useful after dark, so the beam fades out through daylight.
+    // Real lighthouse lamps are most useful after dark, so the beam switches off during daylight.
     // The beam sweeps low across the sea, pivoting from the lantern rather than pointing into the sky.
     const nightCycle = this.getLighthouseNightCycle(sceneState);
     const nightVisibility = nightCycle.visibility;
@@ -965,8 +963,10 @@ class TimeMechanic {
   }
 
   getLighthouseNightCycle(sceneState) {
-    // Shared by the long lighthouse beam and the local lamp glow so both rotate and fade together.
-    const visibility = constrain(map(sceneState.nightAmount, 0.55, 1, 0, 1), 0, 1);
+    // Shared by the long lighthouse beam and the local lamp glow so both rotate together.
+    // The beam switches on at night and off in daylight, avoiding a slow fade that can look like a pause.
+    const isNight = sceneState.cycleProgress >= 0.76 || sceneState.cycleProgress < 0.12;
+    const visibility = isNight ? 1 : 0;
     const rotation = this.getNightProgress(sceneState.cycleProgress) * TWO_PI * 2;
     const facingViewer = pow(0.5 + 0.5 * cos(rotation), 1.4);
 
